@@ -1,4 +1,4 @@
-package com.service;
+package com.service.ServiceInterface;
 
 import com.entity.Employee;
 
