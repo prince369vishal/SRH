@@ -1,7 +1,8 @@
-package com.service;
+package com.service.ServiceImpl;
 
 import com.entity.Employee;
 import com.repository.EmployeeRepository;
+import com.service.ServiceInterface.EmployeeService;
 import org.springframework.stereotype.Service;
 
 @Service

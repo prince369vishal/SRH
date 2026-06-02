@@ -1,7 +1,7 @@
 package com.controller;
 
 import com.entity.Employee;
-import com.service.EmployeeService;
+import com.service.ServiceInterface.EmployeeService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
