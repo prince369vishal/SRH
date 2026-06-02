@@ -5,8 +5,7 @@ import com.service.ServiceInterface.EmployeeService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/employees")
-@CrossOrigin("*")
+@RequestMapping("/api/employee")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
