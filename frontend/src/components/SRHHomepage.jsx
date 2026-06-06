@@ -145,7 +145,7 @@ function RevealDiv({ children, className = '', delay = 0, style = {} }) {
   );
 }
 
-export default function SRHHomepage() {
+export default function SRHHomepage({ currentUser, onLogout }) {
   const [activeNav, setActiveNav] = useState('People');
 
   return (
@@ -167,7 +167,10 @@ export default function SRHHomepage() {
             ))}
           </div>
           <div className="nav-actions">
-            <button className="btn-ghost">Sign in</button>
+            <span className="nav-user">{currentUser?.email}</span>
+            <button className="btn-ghost" onClick={onLogout}>
+              Sign out
+            </button>
             <button className="btn-primary">Get started →</button>
           </div>
         </nav>
