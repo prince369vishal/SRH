@@ -460,3 +460,116 @@ footer {
     .roles-grid { grid-template-columns: 1fr; }
     footer { padding: 32px 24px; }
 }
+
+.employee-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(0,0,0,0.68);
+    backdrop-filter: blur(10px);
+}
+
+.employee-modal {
+    width: min(100%, 520px);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--navy-2);
+    box-shadow: 0 28px 90px rgba(0,0,0,0.55);
+    padding: 28px;
+}
+
+.employee-modal-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.employee-modal-header h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--text);
+}
+
+.employee-modal-kicker {
+    color: var(--cyan);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.employee-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.employee-close:hover {
+    color: var(--text);
+    border-color: var(--border-hover);
+}
+
+.employee-form {
+    display: grid;
+    gap: 16px;
+}
+
+.employee-field {
+    display: grid;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.employee-field input,
+.employee-field select {
+    height: 44px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    padding: 0 14px;
+    font: inherit;
+    outline: none;
+}
+
+.employee-field select option {
+    color: #001018;
+}
+
+.employee-field input:focus,
+.employee-field select:focus {
+    border-color: var(--border-hover);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
+}
+
+.employee-form-status {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,212,255,0.22);
+    background: rgba(0,212,255,0.08);
+    color: var(--cyan);
+    font-size: 13px;
+}
+
+.employee-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 4px;
+}
