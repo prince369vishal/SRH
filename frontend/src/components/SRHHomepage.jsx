@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import './SRHHomepage.css';
 import logo from '../assets/Logo.png';
+
+const API_BASE_URL = 'http://localhost:8080';
 const SIDEBAR_ITEMS = [
   { label: 'Dashboard', icon: '⬡', active: true },
   { label: 'People', icon: '◈' },
@@ -80,6 +82,15 @@ const FEATURES = [
   },
 ];
 
+const ROLE_OPTIONS = ['EMPLOYEE', 'OPERATOR', 'PROJECT_ADMIN', 'ADMIN'];
+
+const DEFAULT_EMPLOYEE_FORM = {
+  name: '',
+  email: '',
+  password: '',
+  role: 'EMPLOYEE',
+};
+
 const STEPS = [
   {
     num: '01',
@@ -147,6 +158,44 @@ function RevealDiv({ children, className = '', delay = 0, style = {} }) {
 
 export default function SRHHomepage({ currentUser, onLogout }) {
   const [activeNav, setActiveNav] = useState('People');
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [employeeForm, setEmployeeForm] = useState(DEFAULT_EMPLOYEE_FORM);
+  const [employeeStatus, setEmployeeStatus] = useState('');
+  const [isSavingEmployee, setIsSavingEmployee] = useState(false);
+  const isAdmin = currentUser?.role === 'ADMIN';
+
+  function updateEmployeeForm(field, value) {
+    setEmployeeForm((current) => ({ ...current, [field]: value }));
+  }
+
+  async function handleCreateEmployee(event) {
+    event.preventDefault();
+    setEmployeeStatus('');
+    setIsSavingEmployee(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${currentUser?.token}`,
+        },
+        body: JSON.stringify(employeeForm),
+      });
+
+      if (!response.ok) {
+        throw new Error('Could not add employee. Check your admin login and form values.');
+      }
+
+      const createdEmployee = await response.json();
+      setEmployeeForm(DEFAULT_EMPLOYEE_FORM);
+      setEmployeeStatus(`${createdEmployee.name} was added successfully.`);
+    } catch (error) {
+      setEmployeeStatus(error.message || 'Could not add employee.');
+    } finally {
+      setIsSavingEmployee(false);
+    }
+  }
 
   return (
     <>
@@ -171,7 +220,13 @@ export default function SRHHomepage({ currentUser, onLogout }) {
             <button className="btn-ghost" onClick={onLogout}>
               Sign out
             </button>
-            <button className="btn-primary">Get started →</button>
+            {isAdmin ? (
+              <button className="btn-primary" onClick={() => setShowEmployeeForm(true)}>
+                + Add Employee
+              </button>
+            ) : (
+              <button className="btn-primary">Get started →</button>
+            )}
           </div>
         </nav>
 
@@ -243,9 +298,17 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                   <div className="preview-topbar">
                     <div className="preview-topbar-title">People View</div>
                     <div className="preview-topbar-right">
-                      <div className="mini-btn">Filter</div>
-                      <div className="mini-btn">Export</div>
-                      <div className="mini-btn accent">+ Add Employee</div>
+                      <button className="mini-btn" type="button">Filter</button>
+                      <button className="mini-btn" type="button">Export</button>
+                      {isAdmin ? (
+                        <button
+                          className="mini-btn accent"
+                          type="button"
+                          onClick={() => setShowEmployeeForm(true)}
+                        >
+                          + Add Employee
+                        </button>
+                      ) : null}
                     </div>
                   </div>
 
@@ -454,6 +517,89 @@ export default function SRHHomepage({ currentUser, onLogout }) {
         </RevealDiv>
       </section>
 
+      {isAdmin && showEmployeeForm ? (
+        <div className="employee-modal-backdrop">
+          <div
+            className="employee-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="employee-form-title"
+          >
+            <div className="employee-modal-header">
+              <div>
+                <div className="employee-modal-kicker">Admin Action</div>
+                <h2 id="employee-form-title">Add Employee</h2>
+              </div>
+              <button
+                className="employee-close"
+                type="button"
+                onClick={() => setShowEmployeeForm(false)}
+                aria-label="Close add employee form"
+              >
+                X
+              </button>
+            </div>
+
+            <form className="employee-form" onSubmit={handleCreateEmployee}>
+              <label className="employee-field">
+                <span>Name</span>
+                <input
+                  value={employeeForm.name}
+                  onChange={(event) => updateEmployeeForm('name', event.target.value)}
+                  required
+                />
+              </label>
+
+              <label className="employee-field">
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={employeeForm.email}
+                  onChange={(event) => updateEmployeeForm('email', event.target.value)}
+                  required
+                />
+              </label>
+
+              <label className="employee-field">
+                <span>Password</span>
+                <input
+                  type="password"
+                  value={employeeForm.password}
+                  onChange={(event) => updateEmployeeForm('password', event.target.value)}
+                  required
+                />
+              </label>
+
+              <label className="employee-field">
+                <span>Role</span>
+                <select
+                  value={employeeForm.role}
+                  onChange={(event) => updateEmployeeForm('role', event.target.value)}
+                >
+                  {ROLE_OPTIONS.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {employeeStatus ? (
+                <div className="employee-form-status">{employeeStatus}</div>
+              ) : null}
+
+              <div className="employee-form-actions">
+                <button className="btn-ghost" type="button" onClick={() => setShowEmployeeForm(false)}>
+                  Cancel
+                </button>
+                <button className="btn-primary" type="submit" disabled={isSavingEmployee}>
+                  {isSavingEmployee ? 'Saving...' : 'Save Employee'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
       {/* FOOTER */}
       <footer>
         <div className="footer-left">
@@ -470,3 +616,5 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     </>
   );
 }
+
+
