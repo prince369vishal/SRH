@@ -1,18 +1,20 @@
 package com.service.ServiceInterface;
 
-import com.entity.Employee;
+import com.dto.request.EmployeeRequest;
+import com.dto.request.EmployeeUpdateRequest;
+import com.dto.response.EmployeeResponse;
 
 import java.util.List;
 
 public interface EmployeeService {
 
-    List<Employee> getAllEmployees();
+    List<EmployeeResponse> getAllEmployees();
 
-    Employee getEmployeeById(Long id);
+    EmployeeResponse getEmployeeById(Long id);
 
-    Employee saveEmployee(Employee employee);
+    EmployeeResponse saveEmployee(EmployeeRequest employeeRequest);
 
-    Employee updateEmployee(Long id, Employee employee);
+    EmployeeResponse updateEmployee(Long id, EmployeeUpdateRequest employeeRequest);
 
     void deleteEmployee(Long id);
 }
