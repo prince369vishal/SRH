@@ -1,5 +1,8 @@
 package com.service.ServiceImpl;
 
+import com.dto.request.EmployeeRequest;
+import com.dto.request.EmployeeUpdateRequest;
+import com.dto.response.EmployeeResponse;
 import com.entity.Employee;
 import com.repository.EmployeeRepository;
 import com.service.ServiceInterface.EmployeeService;
@@ -23,46 +26,76 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public List<Employee> getAllEmployees() {
-        return employeeRepository.findAll();
+    public List<EmployeeResponse> getAllEmployees() {
+        return employeeRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override
-    public Employee getEmployeeById(Long id) {
-        return employeeRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
+    public EmployeeResponse getEmployeeById(Long id) {
+        return toResponse(findEmployeeById(id));
     }
 
     @Override
-    public Employee saveEmployee(Employee employee) {
-        encodePasswordIfPresent(employee);
-        return employeeRepository.save(employee);
+    public EmployeeResponse saveEmployee(EmployeeRequest employeeRequest) {
+        employeeRepository.findByEmail(employeeRequest.getEmail()).ifPresent(existing -> {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Employee email already exists");
+        });
+
+        Employee employee = new Employee();
+        employee.setName(employeeRequest.getName());
+        employee.setEmail(employeeRequest.getEmail());
+        employee.setPassword(passwordEncoder.encode(employeeRequest.getPassword()));
+        employee.setRole(employeeRequest.getRole());
+
+        return toResponse(employeeRepository.save(employee));
     }
 
     @Override
-    public Employee updateEmployee(Long id, Employee updatedEmployee) {
-        Employee employee = getEmployeeById(id);
-        employee.setName(updatedEmployee.getName());
-        employee.setEmail(updatedEmployee.getEmail());
-        employee.setRole(updatedEmployee.getRole());
+    public EmployeeResponse updateEmployee(Long id, EmployeeUpdateRequest employeeRequest) {
+        Employee employee = findEmployeeById(id);
 
-        if (updatedEmployee.getPassword() != null && !updatedEmployee.getPassword().isBlank()) {
-            employee.setPassword(updatedEmployee.getPassword());
-            encodePasswordIfPresent(employee);
+        if (employeeRequest.getEmail() != null && !employeeRequest.getEmail().equals(employee.getEmail())) {
+            employeeRepository.findByEmail(employeeRequest.getEmail()).ifPresent(existing -> {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Employee email already exists");
+            });
+            employee.setEmail(employeeRequest.getEmail());
         }
 
-        return employeeRepository.save(employee);
+        if (employeeRequest.getName() != null) {
+            employee.setName(employeeRequest.getName());
+        }
+
+        if (employeeRequest.getRole() != null) {
+            employee.setRole(employeeRequest.getRole());
+        }
+
+        if (employeeRequest.getPassword() != null && !employeeRequest.getPassword().isBlank()) {
+            employee.setPassword(passwordEncoder.encode(employeeRequest.getPassword()));
+        }
+
+        return toResponse(employeeRepository.save(employee));
     }
 
     @Override
     public void deleteEmployee(Long id) {
-        Employee employee = getEmployeeById(id);
+        Employee employee = findEmployeeById(id);
         employeeRepository.delete(employee);
     }
 
-    private void encodePasswordIfPresent(Employee employee) {
-        if (employee.getPassword() != null && !employee.getPassword().startsWith("$2")) {
-            employee.setPassword(passwordEncoder.encode(employee.getPassword()));
-        }
+    private Employee findEmployeeById(Long id) {
+        return employeeRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found"));
+    }
+
+    private EmployeeResponse toResponse(Employee employee) {
+        return new EmployeeResponse(
+                employee.getId(),
+                employee.getName(),
+                employee.getEmail(),
+                employee.getRole()
+        );
     }
 }
