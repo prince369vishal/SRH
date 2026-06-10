@@ -1,597 +1,462 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './SRHHomepage.css';
 import logo from '../assets/Logo.png';
-
-const API_BASE_URL = 'http://localhost:8080';
-const SIDEBAR_ITEMS = [
-  { label: 'Dashboard', icon: '⬡', active: true },
-  { label: 'People', icon: '◈' },
-  { label: 'Projects', icon: '◇' },
-  { label: 'Clients', icon: '○' },
-  { label: 'Interviews', icon: '◫' },
-  { label: 'Audit Log', icon: '≡' },
-];
-
-const EMPLOYEES = [
-  {
-    name: 'Aryan Mehta',
-    skills: 'React, Node.js',
-    score: 92,
-    status: 'bench',
-    days: '14d',
-  },
-  {
-    name: 'Priya Sharma',
-    skills: 'Java, Spring Boot',
-    score: 87,
-    status: 'shortlisted',
-    days: '8d',
-  },
-  {
-    name: 'Rahul Nair',
-    skills: 'Python, ML',
-    score: 81,
-    status: 'bench',
-    days: '22d',
-  },
-  {
-    name: 'Sneha Iyer',
-    skills: 'React, TypeScript',
-    score: 76,
-    status: 'allocated',
-    days: '—',
-  },
-];
-
-const FEATURES = [
-  {
-    icon: '🔍',
-    color: 'cyan',
-    title: 'Skill-Based Search',
-    desc: 'Multi-criteria Atlas Search with filters for skill, department, location, and availability. Returns paginated, ranked results instantly.',
-  },
-  {
-    icon: '📊',
-    color: 'gold',
-    title: 'Composite Ranking',
-    desc: 'Candidates scored by skill match (60%), bench duration (30%), and performance rating (10%). Elimination of guesswork in allocation decisions.',
-  },
-  {
-    icon: '🔄',
-    color: 'blue',
-    title: 'Requirement Lifecycle',
-    desc: 'State machine: OPEN → INTERVIEW_SCHEDULED → IN_PROGRESS → FULFILLED → CLOSED. Server-side validation with full audit trail.',
-  },
-  {
-    icon: '🏗️',
-    color: 'cyan',
-    title: 'Project Management',
-    desc: 'CRUD projects and clients, associate requirements, map employees to roles. Real-time headcount and fulfilment tracking per project.',
-  },
-  {
-    icon: '📋',
-    color: 'gold',
-    title: 'Interview Scheduling',
-    desc: 'Multi-round interview management linked to requirements. Track pass/fail per round, compute overall status, support external candidates.',
-  },
-  {
-    icon: '🛡️',
-    color: 'blue',
-    title: 'Audit & Security',
-    desc: 'Every state change logged with actor ID, timestamp, and old/new values. JWT + Spring Security 6 with BCrypt and role-based access.',
-  },
-];
+import { API_BASE_URL } from '../config.js';
 
 const ROLE_OPTIONS = ['EMPLOYEE', 'OPERATOR', 'PROJECT_ADMIN', 'ADMIN'];
 
 const DEFAULT_EMPLOYEE_FORM = {
-  name: '',
+  employeeCode: '',
+  firstName: '',
+  lastName: '',
   email: '',
   password: '',
   role: 'EMPLOYEE',
+  phoneNumber: '',
+  department: '',
+  designation: '',
+  location: '',
+  status: 'ON_BENCH',
 };
 
-const STEPS = [
-  {
-    num: '01',
-    title: 'Import & Onboard Employees',
-    desc: 'Bulk import via CSV/Excel or add individually. Capture skills with proficiency levels, certifications, project history, and location.',
-    tag: 'Data Entry Operator',
-    tagColor: 'gold',
-  },
-  {
-    num: '02',
-    title: 'Search & Rank Candidates',
-    desc: 'Project Admins run multi-skill searches with filters. The ranking engine scores every match using the composite formula and surfaces the best fit instantly.',
-    tag: 'Project Administrator',
-    tagColor: 'cyan',
-  },
-  {
-    num: '03',
-    title: 'Schedule Interviews',
-    desc: 'Create interview rounds tied to requirements. Assign panelists, set rounds, record outcomes. Status propagates back to the requirement state machine.',
-    tag: 'Admin',
-    tagColor: 'blue',
-  },
-  {
-    num: '04',
-    title: 'Allocate & Track',
-    desc: 'Assign selected employees to requirements. Bench status auto-updates. Employees return to bench automatically when a project closes.',
-    tag: 'All Roles',
-    tagColor: 'cyan',
-  },
-];
+const DEFAULT_EDIT_FORM = {
+  employeeCode: '',
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+  role: 'EMPLOYEE',
+  phoneNumber: '',
+  department: '',
+  designation: '',
+  location: '',
+  status: 'ON_BENCH',
+  skillsText: '',
+  certificationsText: '',
+};
 
-function useReveal() {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting) {
-          el.classList.add('visible');
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.12 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
-  return ref;
-  return ref;
+function authHeaders(token) {
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
 }
 
-function RevealDiv({ children, className = '', delay = 0, style = {} }) {
-  const ref = useReveal();
-  return (
-    <div
-      ref={ref}
-      className={`reveal ${className}`}
-      style={{ transitionDelay: `${delay}s`, ...style }}
-    >
-      {children}
-    </div>
-  );
+function fullName(employee) {
+  return [employee?.firstName, employee?.lastName].filter(Boolean).join(' ') || '-';
+}
+
+function listToText(items, key) {
+  return (items || []).map((item) => item?.[key]).filter(Boolean).join(', ');
+}
+
+function textToSkills(value) {
+  return value
+    .split(',')
+    .map((skillName) => skillName.trim())
+    .filter(Boolean)
+    .map((skillName) => ({ skillName }));
+}
+
+function textToCertifications(value) {
+  return value
+    .split(',')
+    .map((certificationName) => certificationName.trim())
+    .filter(Boolean)
+    .map((certificationName) => ({ certificationName }));
+}
+
+function employeeToEditForm(employee) {
+  return {
+    ...DEFAULT_EDIT_FORM,
+    employeeCode: employee?.employeeCode || '',
+    firstName: employee?.firstName || '',
+    lastName: employee?.lastName || '',
+    email: employee?.email || '',
+    role: employee?.role || 'EMPLOYEE',
+    phoneNumber: employee?.phoneNumber || '',
+    department: employee?.department || '',
+    designation: employee?.designation || '',
+    location: employee?.location || '',
+    status: employee?.status || 'ON_BENCH',
+    skillsText: listToText(employee?.skills, 'skillName'),
+    certificationsText: listToText(employee?.certifications, 'certificationName'),
+  };
 }
 
 export default function SRHHomepage({ currentUser, onLogout }) {
-  const [activeNav, setActiveNav] = useState('People');
+  const isPrivileged = ['ADMIN', 'PROJECT_ADMIN', 'OPERATOR'].includes(currentUser?.role);
+  const landingView = currentUser?.role === 'PROJECT_ADMIN' ? 'Projects' : isPrivileged ? 'People' : 'Profile';
+  const [activeNav, setActiveNav] = useState(landingView);
+  const [profile, setProfile] = useState(null);
+  const [employees, setEmployees] = useState([]);
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [employeeForm, setEmployeeForm] = useState(DEFAULT_EMPLOYEE_FORM);
-  const [employeeStatus, setEmployeeStatus] = useState('');
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [editForm, setEditForm] = useState(DEFAULT_EDIT_FORM);
+  const [status, setStatus] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isSavingEmployee, setIsSavingEmployee] = useState(false);
-  const isAdmin = currentUser?.role === 'ADMIN';
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const visibleEmployees = useMemo(() => {
+    if (isPrivileged) return employees;
+    return profile ? [profile] : [];
+  }, [employees, isPrivileged, profile]);
+
+  const metrics = useMemo(() => ({
+    bench: visibleEmployees.filter((employee) => employee.status === 'ON_BENCH').length,
+    shortlisted: visibleEmployees.filter((employee) => employee.status === 'SHORTLISTED').length,
+    allocated: visibleEmployees.filter((employee) => employee.status === 'ALLOCATED').length,
+    total: visibleEmployees.length,
+  }), [visibleEmployees]);
+
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      setStatus('');
+
+      try {
+        const profileResponse = await fetch(`${API_BASE_URL}/api/employees/me`, {
+          headers: authHeaders(currentUser?.token),
+        });
+
+        if (!profileResponse.ok) {
+          throw new Error('Session expired or profile access denied.');
+        }
+
+        setProfile(await profileResponse.json());
+
+        if (isPrivileged) {
+          const employeesResponse = await fetch(`${API_BASE_URL}/api/admin/employees`, {
+            headers: authHeaders(currentUser?.token),
+          });
+
+          if (!employeesResponse.ok) {
+            throw new Error('Employee list access denied for this role.');
+          }
+
+          setEmployees(await employeesResponse.json());
+        }
+      } catch (error) {
+        setStatus(error.message || 'Could not load employee data.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadData();
+  }, [currentUser?.token, isPrivileged]);
 
   function updateEmployeeForm(field, value) {
     setEmployeeForm((current) => ({ ...current, [field]: value }));
   }
 
+  function updateEditForm(field, value) {
+    setEditForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function openEditEmployee(employee) {
+    setEditingEmployee(employee);
+    setEditForm(employeeToEditForm(employee));
+  }
+
   async function handleCreateEmployee(event) {
     event.preventDefault();
-    setEmployeeStatus('');
+    setStatus('');
     setIsSavingEmployee(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/employees`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/employees`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${currentUser?.token}`,
-        },
+        headers: authHeaders(currentUser?.token),
         body: JSON.stringify(employeeForm),
       });
 
       if (!response.ok) {
-        throw new Error('Could not add employee. Check your admin login and form values.');
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message || 'Could not add employee.');
       }
 
       const createdEmployee = await response.json();
+      setEmployees((current) => [createdEmployee, ...current]);
       setEmployeeForm(DEFAULT_EMPLOYEE_FORM);
-      setEmployeeStatus(`${createdEmployee.name} was added successfully.`);
+      setShowEmployeeForm(false);
+      setStatus(`${fullName(createdEmployee)} was added successfully.`);
     } catch (error) {
-      setEmployeeStatus(error.message || 'Could not add employee.');
+      setStatus(error.message || 'Could not add employee.');
     } finally {
       setIsSavingEmployee(false);
     }
   }
 
+  async function handleUpdateEmployee(event) {
+    event.preventDefault();
+    if (!editingEmployee) return;
+
+    setStatus('');
+    setIsSavingEdit(true);
+
+    const isOwnProfile = editingEmployee.id === profile?.id;
+    const selfServicePayload = {
+      phoneNumber: editForm.phoneNumber,
+      location: editForm.location,
+      skills: textToSkills(editForm.skillsText),
+      certifications: textToCertifications(editForm.certificationsText),
+    };
+
+    const managedPayload = {
+      employeeCode: editForm.employeeCode,
+      firstName: editForm.firstName,
+      lastName: editForm.lastName,
+      email: editForm.email,
+      role: editForm.role,
+      phoneNumber: editForm.phoneNumber,
+      department: editForm.department,
+      designation: editForm.designation,
+      location: editForm.location,
+      status: editForm.status,
+      skills: textToSkills(editForm.skillsText),
+      certifications: textToCertifications(editForm.certificationsText),
+    };
+
+    if (editForm.password.trim()) {
+      managedPayload.password = editForm.password.trim();
+    }
+
+    try {
+      const response = await fetch(
+        isPrivileged && !isOwnProfile
+          ? `${API_BASE_URL}/api/admin/employees/${editingEmployee.id}`
+          : `${API_BASE_URL}/api/employees/me`,
+        {
+          method: 'PUT',
+          headers: authHeaders(currentUser?.token),
+          body: JSON.stringify(isPrivileged && !isOwnProfile ? managedPayload : selfServicePayload),
+        },
+      );
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message || 'Could not update employee.');
+      }
+
+      const updatedEmployee = await response.json();
+      if (updatedEmployee.id === profile?.id) {
+        setProfile(updatedEmployee);
+      }
+      setEmployees((current) => current.map((employee) => (
+        employee.id === updatedEmployee.id ? updatedEmployee : employee
+      )));
+      setEditingEmployee(null);
+      setEditForm(DEFAULT_EDIT_FORM);
+      setStatus(`${fullName(updatedEmployee)} was updated successfully.`);
+    } catch (error) {
+      setStatus(error.message || 'Could not update employee.');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  }
+
   return (
-    <>
-      <div className="srh-root">
-        {/* NAV */}
-        <nav>
-          <div className="nav-logo">
-            <div className="nav-logo-mark">
-              <img src={logo} alt="Company Logo" />
-            </div>
-            Smart Resource Hiring
+    <div className="srh-root app-shell">
+      <nav>
+        <div className="nav-logo">
+          <div className="nav-logo-mark">
+            <img src={logo} alt="Company Logo" />
           </div>
-          <div className="nav-links">
-            {['Features', 'How it works', 'Roles', 'Architecture'].map((l) => (
-              <a key={l} href="#">
-                {l}
-              </a>
-            ))}
+          Smart Resource Hiring
+        </div>
+        <div className="nav-links">
+          {['People', 'Projects', 'Clients', 'Interviews'].map((item) => (
+            <a key={item} href="#" onClick={(event) => { event.preventDefault(); setActiveNav(item); }}>
+              {item}
+            </a>
+          ))}
+        </div>
+        <div className="nav-actions">
+          <span className="nav-user">{currentUser?.email} · {currentUser?.role}</span>
+          <button className="btn-ghost" onClick={onLogout}>Sign out</button>
+          {isPrivileged ? (
+            <button className="btn-primary" onClick={() => setShowEmployeeForm(true)}>+ Add Employee</button>
+          ) : (
+            <button className="btn-primary" onClick={() => setActiveNav('Profile')}>My Profile</button>
+          )}
+        </div>
+      </nav>
+
+      <main className="workspace">
+        <aside className="preview-sidebar workspace-sidebar">
+          <div className="sidebar-logo">
+            <div className="sidebar-logo-mark">S</div>
+            SRH Portal
           </div>
-          <div className="nav-actions">
-            <span className="nav-user">{currentUser?.email}</span>
-            <button className="btn-ghost" onClick={onLogout}>
-              Sign out
+          <div className="sidebar-section">Workspace</div>
+          {['Profile', 'People', 'Projects', 'Clients', 'Interviews', 'Audit Log'].map((item) => (
+            <button
+              key={item}
+              className={`sidebar-item ${activeNav === item ? 'active' : ''}`}
+              onClick={() => setActiveNav(item)}
+              type="button"
+            >
+              <span>{item.slice(0, 1)}</span>
+              {item}
             </button>
-            {isAdmin ? (
-              <button className="btn-primary" onClick={() => setShowEmployeeForm(true)}>
-                + Add Employee
-              </button>
+          ))}
+        </aside>
+
+        <section className="workspace-main">
+          <div className="preview-topbar">
+            <div>
+              <div className="preview-topbar-title">
+                {activeNav === 'Projects' ? 'Project View' : activeNav === 'Profile' ? 'Employee Profile' : 'People View'}
+              </div>
+              <div className="workspace-subtitle">
+                {isPrivileged
+                  ? 'Admin, project admin, and operator roles can manage employee data.'
+                  : 'Employees can view their own profile and update allowed fields only.'}
+              </div>
+            </div>
+            <div className="preview-topbar-right">
+              {isPrivileged ? <button className="mini-btn" type="button">Filter</button> : null}
+              {isPrivileged ? <button className="mini-btn" type="button">Export</button> : null}
+            </div>
+          </div>
+
+          <div className="preview-content workspace-content">
+            <div className="metrics-row">
+              <div className="metric-card cyan">
+                <div className="metric-label">On Bench</div>
+                <div className="metric-value">{metrics.bench}</div>
+                <div className="metric-sub">Available now</div>
+              </div>
+              <div className="metric-card gold">
+                <div className="metric-label">Shortlisted</div>
+                <div className="metric-value">{metrics.shortlisted}</div>
+                <div className="metric-sub">In consideration</div>
+              </div>
+              <div className="metric-card green">
+                <div className="metric-label">Allocated</div>
+                <div className="metric-value">{metrics.allocated}</div>
+                <div className="metric-sub">Active projects</div>
+              </div>
+              <div className="metric-card">
+                <div className="metric-label">Profiles</div>
+                <div className="metric-value">{metrics.total}</div>
+                <div className="metric-sub">{isPrivileged ? 'Visible records' : 'Your account'}</div>
+              </div>
+            </div>
+
+            {status ? <div className="employee-form-status">{status}</div> : null}
+
+            {activeNav === 'Projects' ? (
+              <div className="empty-state">
+                <h2>Project workspace</h2>
+                <p>Project routing is ready for project administrators. Project CRUD can be connected after the project entities are added.</p>
+              </div>
             ) : (
-              <button className="btn-primary">Get started →</button>
+              <div className="table-section">
+                <div className="table-header">
+                  <span className="table-title">{isPrivileged && activeNav !== 'Profile' ? 'Employees' : 'My Profile'}</span>
+                  <span className="table-badge">{isLoading ? 'Loading' : `${visibleEmployees.length} record(s)`}</span>
+                </div>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Code</th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Department</th>
+                      <th>Location</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleEmployees.map((employee) => (
+                      <tr key={employee.id}>
+                        <td>{employee.employeeCode}</td>
+                        <td style={{ color: 'var(--text)', fontWeight: 600 }}>{fullName(employee)}</td>
+                        <td>{employee.email}</td>
+                        <td>{employee.department || '-'}</td>
+                        <td>{employee.location || '-'}</td>
+                        <td>{employee.role}</td>
+                        <td>
+                          <span className={`status-pill ${employee.status === 'ON_BENCH' ? 'status-bench' : employee.status === 'ALLOCATED' ? 'status-alloc' : 'status-short'}`}>
+                            {employee.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="mini-btn" type="button" onClick={() => openEditEmployee(employee)}>
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
-        </nav>
-
-        {/* HERO */}
-        <section className="hero">
-          <div className="hero-bg-orb orb-1" />
-          <div className="hero-bg-orb orb-2" />
-          <div className="hero-bg-orb orb-3" />
-
-          <div className="hero-badge">
-            <div className="badge-dot" />
-            Smart Resource Hiring V.1.0.0
-          </div>
-
-          <h1 className="hero-title">
-            <span className="accent"> AI-Powered</span>
-            <br />
-            Smart Hiring System
-            <span className="accent-gold"></span>
-          </h1>
-          <p className="hero-paragraph">
-            Smart Hiring Resource enables organizations to efficiently manage
-            hiring, staffing, and resource allocation from <br /> requirement
-            creation to project fulfillment.
-          </p>
-
-          {/* DASHBOARD PREVIEW */}
-          <div className="preview-section">
-            <div className="preview-frame">
-              <div className="preview-bar">
-                <div
-                  className="preview-dot"
-                  style={{ background: '#ff5f57' }}
-                />
-                <div
-                  className="preview-dot"
-                  style={{ background: '#febc2e' }}
-                />
-                <div
-                  className="preview-dot"
-                  style={{ background: '#28c840' }}
-                />
-                <span className="preview-bar-title">
-                  srh.enterprise.io/people
-                </span>
-              </div>
-              <div className="preview-body">
-                {/* Sidebar */}
-                <div className="preview-sidebar">
-                  <div className="sidebar-logo">
-                    <div className="sidebar-logo-mark">S</div>
-                    SRH Portal
-                  </div>
-                  <div className="sidebar-section">Main</div>
-                  {SIDEBAR_ITEMS.map((item) => (
-                    <div
-                      key={item.label}
-                      className={`sidebar-item ${activeNav === item.label || (item.active && activeNav === 'People') ? 'active' : ''}`}
-                      onClick={() => setActiveNav(item.label)}
-                    >
-                      <span style={{ fontSize: 15 }}>{item.icon}</span>
-                      {item.label}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Main content */}
-                <div className="preview-main">
-                  <div className="preview-topbar">
-                    <div className="preview-topbar-title">People View</div>
-                    <div className="preview-topbar-right">
-                      <button className="mini-btn" type="button">Filter</button>
-                      <button className="mini-btn" type="button">Export</button>
-                      {isAdmin ? (
-                        <button
-                          className="mini-btn accent"
-                          type="button"
-                          onClick={() => setShowEmployeeForm(true)}
-                        >
-                          + Add Employee
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  <div className="preview-content">
-                    <div className="metrics-row">
-                      <div className="metric-card cyan">
-                        <div className="metric-label">On Bench</div>
-                        <div className="metric-value">24</div>
-                        <div className="metric-sub">Available now</div>
-                      </div>
-                      <div className="metric-card gold">
-                        <div className="metric-label">Shortlisted</div>
-                        <div className="metric-value">8</div>
-                        <div className="metric-sub">In consideration</div>
-                      </div>
-                      <div className="metric-card green">
-                        <div className="metric-label">Allocated</div>
-                        <div className="metric-value">61</div>
-                        <div className="metric-sub">Active on projects</div>
-                      </div>
-                      <div className="metric-card">
-                        <div className="metric-label">Fulfilment Rate</div>
-                        <div className="metric-value">94%</div>
-                        <div className="metric-sub">Last 30 days</div>
-                      </div>
-                    </div>
-
-                    <div className="table-section">
-                      <div className="table-header">
-                        <span className="table-title">Ranked Candidates</span>
-                        <span className="table-badge">
-                          React · 3+ yrs · Bangalore
-                        </span>
-                      </div>
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>Skills</th>
-                            <th>Match Score</th>
-                            <th>Bench</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {EMPLOYEES.map((e, i) => (
-                            <tr key={i}>
-                              <td
-                                style={{
-                                  color: 'var(--text)',
-                                  fontWeight: 500,
-                                }}
-                              >
-                                {e.name}
-                              </td>
-                              <td>{e.skills}</td>
-                              <td>
-                                <div className="rank-score">
-                                  <span
-                                    style={{
-                                      color: 'var(--text)',
-                                      fontWeight: 600,
-                                      fontSize: 13,
-                                    }}
-                                  >
-                                    {e.score}%
-                                  </span>
-                                  <div className="score-bar-wrap">
-                                    <div
-                                      className="score-bar"
-                                      style={{ width: `${e.score}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </td>
-                              <td>{e.days}</td>
-                              <td>
-                                <span
-                                  className={`status-pill ${e.status === 'bench' ? 'status-bench' : e.status === 'allocated' ? 'status-alloc' : 'status-short'}`}
-                                >
-                                  {e.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </section>
-      </div>
+      </main>
 
-      {/* FEATURES */}
-      <section className="section">
-        <RevealDiv>
-          <div className="section-tag">Capabilities</div>
-          <h2 className="section-title">
-            Everything you need to staff smarter
-          </h2>
-          <p className="section-desc">
-            From profile ingestion to project closure — every step of the
-            staffing lifecycle in one auditable platform.
-          </p>
-        </RevealDiv>
-        <RevealDiv delay={0.1}>
-          <div className="features-grid">
-            {FEATURES.map((f, i) => (
-              <div key={i} className="feature-card">
-                <div className={`feature-icon ${f.color}`}>{f.icon}</div>
-                <div className="feature-title">{f.title}</div>
-                <div className="feature-desc">{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </RevealDiv>
-      </section>
-
-      {/* RANKING */}
-      <section className="ranking-section">
-        <div
-          style={{
-            maxWidth: 960,
-            margin: '0 auto',
-            display: 'flex',
-            gap: 80,
-            alignItems: 'flex-start',
-            flexWrap: 'wrap',
-          }}
-        >
-          <RevealDiv style={{ flex: '0 0 auto', maxWidth: 420 }}>
-            <div className="section-tag">Ranking Engine</div>
-            <h2 className="section-title" style={{ marginBottom: 16 }}>
-              Objective scoring, every time
-            </h2>
-            <p className="section-desc" style={{ marginBottom: 0 }}>
-              No more gut-feel hiring decisions. The composite ranking formula
-              ensures the most available, best-matched candidate rises to the
-              top automatically.
-            </p>
-          </RevealDiv>
-          <RevealDiv delay={0.15} style={{ flex: 1, minWidth: 300 }}>
-            <div className="ranking-card">
-              <div
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: 'var(--text)',
-                  marginBottom: 4,
-                }}
-              >
-                Composite Score Formula
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                Applied to every candidate for a requirement
-              </div>
-              <div className="formula">
-                Score =<br />
-                &nbsp;&nbsp;skill_match% &nbsp;× 0.6 +<br />
-                &nbsp;&nbsp;bench_days_norm × 0.3 +<br />
-                &nbsp;&nbsp;perf_rating &nbsp;&nbsp;&nbsp;× 0.1
-              </div>
-              <div className="weight-bars">
-                {[
-                  { label: 'Skill match %', pct: 60, color: 'var(--cyan)' },
-                  { label: 'Bench duration', pct: 30, color: 'var(--gold)' },
-                  {
-                    label: 'Performance rating',
-                    pct: 10,
-                    color: 'var(--blue-light)',
-                  },
-                ].map((w, i) => (
-                  <div key={i} className="weight-item">
-                    <div className="weight-label">{w.label}</div>
-                    <div className="weight-track">
-                      <div
-                        className="weight-fill"
-                        style={{ width: `${w.pct}%`, background: w.color }}
-                      />
-                    </div>
-                    <div className="weight-pct">{w.pct}%</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </RevealDiv>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="cta-section">
-        <div className="cta-glow" />
-        <RevealDiv>
-          <h2 className="cta-title">Ready to staff your projects smarter?</h2>
-          <p className="cta-sub">
-            Join teams already using SRH to eliminate staffing chaos.
-          </p>
-          <div className="cta-actions">
-            <button className="btn-hero">Get started for free →</button>
-            <button className="btn-hero-outline">View documentation</button>
-          </div>
-        </RevealDiv>
-      </section>
-
-      {isAdmin && showEmployeeForm ? (
+      {isPrivileged && showEmployeeForm ? (
         <div className="employee-modal-backdrop">
-          <div
-            className="employee-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="employee-form-title"
-          >
+          <div className="employee-modal" role="dialog" aria-modal="true" aria-labelledby="employee-form-title">
             <div className="employee-modal-header">
               <div>
                 <div className="employee-modal-kicker">Admin Action</div>
                 <h2 id="employee-form-title">Add Employee</h2>
               </div>
-              <button
-                className="employee-close"
-                type="button"
-                onClick={() => setShowEmployeeForm(false)}
-                aria-label="Close add employee form"
-              >
+              <button className="employee-close" type="button" onClick={() => setShowEmployeeForm(false)} aria-label="Close add employee form">
                 X
               </button>
             </div>
 
             <form className="employee-form" onSubmit={handleCreateEmployee}>
               <label className="employee-field">
-                <span>Name</span>
-                <input
-                  value={employeeForm.name}
-                  onChange={(event) => updateEmployeeForm('name', event.target.value)}
-                  required
-                />
+                <span>Employee Code</span>
+                <input value={employeeForm.employeeCode} onChange={(event) => updateEmployeeForm('employeeCode', event.target.value)} required />
               </label>
-
+              <label className="employee-field">
+                <span>First Name</span>
+                <input value={employeeForm.firstName} onChange={(event) => updateEmployeeForm('firstName', event.target.value)} required />
+              </label>
+              <label className="employee-field">
+                <span>Last Name</span>
+                <input value={employeeForm.lastName} onChange={(event) => updateEmployeeForm('lastName', event.target.value)} required />
+              </label>
               <label className="employee-field">
                 <span>Email</span>
-                <input
-                  type="email"
-                  value={employeeForm.email}
-                  onChange={(event) => updateEmployeeForm('email', event.target.value)}
-                  required
-                />
+                <input type="email" value={employeeForm.email} onChange={(event) => updateEmployeeForm('email', event.target.value)} required />
               </label>
-
               <label className="employee-field">
-                <span>Password</span>
-                <input
-                  type="password"
-                  value={employeeForm.password}
-                  onChange={(event) => updateEmployeeForm('password', event.target.value)}
-                  required
-                />
+                <span>Temporary Password</span>
+                <input type="password" value={employeeForm.password} onChange={(event) => updateEmployeeForm('password', event.target.value)} required minLength={6} />
               </label>
-
               <label className="employee-field">
                 <span>Role</span>
-                <select
-                  value={employeeForm.role}
-                  onChange={(event) => updateEmployeeForm('role', event.target.value)}
-                >
-                  {ROLE_OPTIONS.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
+                <select value={employeeForm.role} onChange={(event) => updateEmployeeForm('role', event.target.value)}>
+                  {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
                 </select>
               </label>
-
-              {employeeStatus ? (
-                <div className="employee-form-status">{employeeStatus}</div>
-              ) : null}
+              <label className="employee-field">
+                <span>Department</span>
+                <input value={employeeForm.department} onChange={(event) => updateEmployeeForm('department', event.target.value)} />
+              </label>
+              <label className="employee-field">
+                <span>Designation</span>
+                <input value={employeeForm.designation} onChange={(event) => updateEmployeeForm('designation', event.target.value)} />
+              </label>
+              <label className="employee-field">
+                <span>Location</span>
+                <input value={employeeForm.location} onChange={(event) => updateEmployeeForm('location', event.target.value)} />
+              </label>
 
               <div className="employee-form-actions">
-                <button className="btn-ghost" type="button" onClick={() => setShowEmployeeForm(false)}>
-                  Cancel
-                </button>
+                <button className="btn-ghost" type="button" onClick={() => setShowEmployeeForm(false)}>Cancel</button>
                 <button className="btn-primary" type="submit" disabled={isSavingEmployee}>
                   {isSavingEmployee ? 'Saving...' : 'Save Employee'}
                 </button>
@@ -600,21 +465,94 @@ export default function SRHHomepage({ currentUser, onLogout }) {
           </div>
         </div>
       ) : null}
-      {/* FOOTER */}
-      <footer>
-        <div className="footer-left">
-          © 2026 Smart Resource Hiring — Enterprise Resource Management Portal
+
+      {editingEmployee ? (
+        <div className="employee-modal-backdrop">
+          <div className="employee-modal employee-modal-wide" role="dialog" aria-modal="true" aria-labelledby="employee-edit-title">
+            <div className="employee-modal-header">
+              <div>
+                <div className="employee-modal-kicker">
+                  {isPrivileged && editingEmployee.id !== profile?.id ? 'Managed Edit' : 'Self Service'}
+                </div>
+                <h2 id="employee-edit-title">Edit Employee</h2>
+              </div>
+              <button className="employee-close" type="button" onClick={() => setEditingEmployee(null)} aria-label="Close edit employee form">
+                X
+              </button>
+            </div>
+
+            <form className="employee-form employee-form-grid" onSubmit={handleUpdateEmployee}>
+              <label className="employee-field">
+                <span>Employee Code</span>
+                <input value={editForm.employeeCode} onChange={(event) => updateEditForm('employeeCode', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id} required />
+              </label>
+              <label className="employee-field">
+                <span>First Name</span>
+                <input value={editForm.firstName} onChange={(event) => updateEditForm('firstName', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id} required />
+              </label>
+              <label className="employee-field">
+                <span>Last Name</span>
+                <input value={editForm.lastName} onChange={(event) => updateEditForm('lastName', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id} required />
+              </label>
+              <label className="employee-field">
+                <span>Email</span>
+                <input type="email" value={editForm.email} onChange={(event) => updateEditForm('email', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id} required />
+              </label>
+              <label className="employee-field">
+                <span>Phone</span>
+                <input value={editForm.phoneNumber} onChange={(event) => updateEditForm('phoneNumber', event.target.value)} />
+              </label>
+              <label className="employee-field">
+                <span>Location</span>
+                <input value={editForm.location} onChange={(event) => updateEditForm('location', event.target.value)} />
+              </label>
+              <label className="employee-field">
+                <span>Department</span>
+                <input value={editForm.department} onChange={(event) => updateEditForm('department', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id} />
+              </label>
+              <label className="employee-field">
+                <span>Designation</span>
+                <input value={editForm.designation} onChange={(event) => updateEditForm('designation', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id} />
+              </label>
+              <label className="employee-field">
+                <span>Role</span>
+                <select value={editForm.role} onChange={(event) => updateEditForm('role', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id}>
+                  {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
+                </select>
+              </label>
+              <label className="employee-field">
+                <span>Status</span>
+                <select value={editForm.status} onChange={(event) => updateEditForm('status', event.target.value)} disabled={!isPrivileged || editingEmployee.id === profile?.id}>
+                  {['ON_BENCH', 'SHORTLISTED', 'ALLOCATED'].map((employeeStatus) => (
+                    <option key={employeeStatus} value={employeeStatus}>{employeeStatus}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="employee-field">
+                <span>Skills</span>
+                <input value={editForm.skillsText} onChange={(event) => updateEditForm('skillsText', event.target.value)} placeholder="Java, React, PostgreSQL" />
+              </label>
+              <label className="employee-field">
+                <span>Certifications</span>
+                <input value={editForm.certificationsText} onChange={(event) => updateEditForm('certificationsText', event.target.value)} placeholder="AWS, Scrum Master" />
+              </label>
+              {isPrivileged && editingEmployee.id !== profile?.id ? (
+                <label className="employee-field">
+                  <span>Reset Password</span>
+                  <input type="password" value={editForm.password} onChange={(event) => updateEditForm('password', event.target.value)} minLength={6} placeholder="Leave blank to keep existing" />
+                </label>
+              ) : null}
+
+              <div className="employee-form-actions employee-form-actions-wide">
+                <button className="btn-ghost" type="button" onClick={() => setEditingEmployee(null)}>Cancel</button>
+                <button className="btn-primary" type="submit" disabled={isSavingEdit}>
+                  {isSavingEdit ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-        <div className="footer-links">
-          {['Privacy', 'Terms', 'Documentation', 'Support'].map((l) => (
-            <a key={l} href="#">
-              {l}
-            </a>
-          ))}
-        </div>
-      </footer>
-    </>
+      ) : null}
+    </div>
   );
 }
-
-

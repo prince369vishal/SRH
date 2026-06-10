@@ -12,9 +12,13 @@ public interface EmployeeService {
 
     EmployeeResponse getEmployeeById(Long id);
 
+    EmployeeResponse getEmployeeByEmail(String email);
+
     EmployeeResponse saveEmployee(EmployeeRequest employeeRequest);
 
     EmployeeResponse updateEmployee(Long id, EmployeeUpdateRequest employeeRequest);
+
+    EmployeeResponse updateOwnProfile(String email, EmployeeUpdateRequest employeeRequest);
 
     void deleteEmployee(Long id);
 }
