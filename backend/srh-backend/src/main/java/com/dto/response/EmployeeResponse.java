@@ -5,24 +5,21 @@ import com.entity.ProjectHistory;
 import com.entity.SkillEntry;
 import com.enums.EmployeeStatus;
 import com.enums.Role;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Schema(description = "Employee details returned by the API. Passwords are never returned.")
 public class EmployeeResponse {
-
-    @Schema(example = "1")
     private Long id;
 
     private String employeeCode;
 
     @Schema(example = "aarav.sharma@example.com")
     private String email;
-
-    @Schema(example = "EMPLOYEE")
     private Role role;
+    private String skills;
+    private Integer experienceYears;
 
     private String firstName;
     private String lastName;
@@ -67,15 +64,20 @@ public class EmployeeResponse {
         this.projectHistory = projectHistory;
     }
 
-    public Long getId() {
-        return id;
+    public EmployeeResponse(Long id, String name, String email, Role role,
+                            String skills, Integer experienceYears) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+        this.skills = skills;
+        this.experienceYears = experienceYears;
     }
 
     public String getEmployeeCode() { return employeeCode; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
     public Role getRole() {
         return role;

@@ -4,7 +4,6 @@ import logo from '../assets/Logo.png';
 import { API_BASE_URL } from '../config.js';
 
 const ROLE_OPTIONS = ['EMPLOYEE', 'OPERATOR', 'PROJECT_ADMIN', 'ADMIN'];
-
 const DEFAULT_EMPLOYEE_FORM = {
   employeeCode: '',
   firstName: '',
@@ -165,7 +164,6 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     event.preventDefault();
     setStatus('');
     setIsSavingEmployee(true);
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/employees`, {
         method: 'POST',
