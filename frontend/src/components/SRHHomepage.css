@@ -25,6 +25,69 @@
 
 body { background: var(--navy); color: var(--text); font-family: var(--font-body); overflow-x: hidden; }
 
+.app-shell {
+    min-height: 100vh;
+    padding-top: 64px;
+    background: var(--navy);
+}
+
+.workspace {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    min-height: calc(100vh - 64px);
+}
+
+.workspace-sidebar {
+    display: block;
+    width: auto;
+    min-height: calc(100vh - 64px);
+    background: var(--navy-2);
+}
+
+.workspace-sidebar .sidebar-item {
+    width: 100%;
+    border: 0;
+    font-family: var(--font-body);
+    text-align: left;
+    background: transparent;
+}
+
+.workspace-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(15,32,64,0.92), var(--navy));
+}
+
+.workspace-subtitle {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.workspace-content {
+    overflow: auto;
+}
+
+.empty-state {
+    padding: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+}
+
+.empty-state h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 620px;
+}
+
 .auth-page {
     min-height: 100vh;
     display: grid;
@@ -452,6 +515,8 @@ footer {
 @media (max-width: 900px) {
     nav { padding: 0 24px; }
     .nav-links { display: none; }
+    .workspace { grid-template-columns: 1fr; }
+    .workspace-sidebar { display: none; }
     .hero { padding: 100px 24px 60px; }
     .preview-section { padding: 0 24px 80px; }
     .preview-sidebar { display: none; }
@@ -479,6 +544,10 @@ footer {
     background: var(--navy-2);
     box-shadow: 0 28px 90px rgba(0,0,0,0.55);
     padding: 28px;
+}
+
+.employee-modal-wide {
+    width: min(100%, 820px);
 }
 
 .employee-modal-header {
@@ -527,6 +596,10 @@ footer {
     gap: 16px;
 }
 
+.employee-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .employee-field {
     display: grid;
     gap: 8px;
@@ -558,6 +631,12 @@ footer {
     box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
 }
 
+.employee-field input:disabled,
+.employee-field select:disabled {
+    opacity: 0.62;
+    cursor: not-allowed;
+}
+
 .employee-form-status {
     padding: 10px 12px;
     border-radius: 8px;
@@ -572,4 +651,8 @@ footer {
     justify-content: flex-end;
     gap: 12px;
     margin-top: 4px;
+}
+
+.employee-form-actions-wide {
+    grid-column: 1 / -1;
 }

@@ -1,64 +1,127 @@
 package com.entity;
 
+import com.enums.EmployeeStatus;
 import com.enums.Role;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "Employee")
+@Table(name = "employees")
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Column(unique = true, nullable = false, length = 50)
+    private String employeeCode;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false, length = 150)
     private String email;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password;
+    @Column(nullable = false)
+    private String passwordHash;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
     private Role role;
 
-    // Comma-separated skills e.g. "Java,Spring Boot,React"
-    @Column(length = 1000)
-    private String skills;
+    @Column(nullable = false, length = 100)
+    private String firstName;
 
-    // Years of total experience
-    @Column(name = "experience_years")
-    private Integer experienceYears;
+    @Column(nullable = false, length = 100)
+    private String lastName;
 
-    public Employee() {}
+    @Column(length = 20)
+    private String phoneNumber;
 
-    public Employee(Long id, String name, String email, String password, Role role) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-    }
+    @Column(length = 100)
+    private String department;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @Column(length = 100)
+    private String designation;
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    @Column(length = 100)
+    private String location;
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    private LocalDate joiningDate;
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    @Builder.Default
+    private EmployeeStatus status = EmployeeStatus.ON_BENCH;
 
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    private LocalDate benchStartDate;
 
-    public String getSkills() { return skills; }
-    public void setSkills(String skills) { this.skills = skills; }
+    private Long performanceManagerId;
 
-    public Integer getExperienceYears() { return experienceYears; }
-    public void setExperienceYears(Integer experienceYears) { this.experienceYears = experienceYears; }
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "employee_skills",
+            joinColumns = @JoinColumn(name = "employee_id")
+    )
+    @Builder.Default
+    private List<SkillEntry> skills = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "employee_certifications",
+            joinColumns = @JoinColumn(name = "employee_id")
+    )
+    @Builder.Default
+    private List<Certification> certifications = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "employee_project_history",
+            joinColumns = @JoinColumn(name = "employee_id")
+    )
+    @Builder.Default
+    private List<ProjectHistory> projectHistory = new ArrayList<>();
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean firstLogin = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 }

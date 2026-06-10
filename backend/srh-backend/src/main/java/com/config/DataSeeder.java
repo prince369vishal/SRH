@@ -17,10 +17,17 @@ public class DataSeeder {
         return args -> employeeRepository.findByEmail("admin@example.com")
                 .orElseGet(() -> {
                     Employee admin = new Employee();
-                    admin.setName("Admin User");
+                    admin.setEmployeeCode("ADMIN-001");
                     admin.setEmail("admin@example.com");
-                    admin.setPassword(passwordEncoder.encode("admin123"));
+                    admin.setPasswordHash(passwordEncoder.encode("admin123"));
                     admin.setRole(Role.ADMIN);
+                    admin.setFirstName("Admin");
+                    admin.setLastName("User");
+                    admin.setDepartment("Administration");
+                    admin.setDesignation("System Administrator");
+                    admin.setLocation("Bangalore");
+                    admin.setActive(true);
+                    admin.setFirstLogin(false);
                     return employeeRepository.save(admin);
                 });
     }
