@@ -83,44 +83,12 @@ const FEATURES = [
 ];
 
 const ROLE_OPTIONS = ['EMPLOYEE', 'OPERATOR', 'PROJECT_ADMIN', 'ADMIN'];
-
 const DEFAULT_EMPLOYEE_FORM = {
   name: '',
   email: '',
   password: '',
   role: 'EMPLOYEE',
 };
-
-const STEPS = [
-  {
-    num: '01',
-    title: 'Import & Onboard Employees',
-    desc: 'Bulk import via CSV/Excel or add individually. Capture skills with proficiency levels, certifications, project history, and location.',
-    tag: 'Data Entry Operator',
-    tagColor: 'gold',
-  },
-  {
-    num: '02',
-    title: 'Search & Rank Candidates',
-    desc: 'Project Admins run multi-skill searches with filters. The ranking engine scores every match using the composite formula and surfaces the best fit instantly.',
-    tag: 'Project Administrator',
-    tagColor: 'cyan',
-  },
-  {
-    num: '03',
-    title: 'Schedule Interviews',
-    desc: 'Create interview rounds tied to requirements. Assign panelists, set rounds, record outcomes. Status propagates back to the requirement state machine.',
-    tag: 'Admin',
-    tagColor: 'blue',
-  },
-  {
-    num: '04',
-    title: 'Allocate & Track',
-    desc: 'Assign selected employees to requirements. Bench status auto-updates. Employees return to bench automatically when a project closes.',
-    tag: 'All Roles',
-    tagColor: 'cyan',
-  },
-];
 
 function useReveal() {
   const ref = useRef(null);
@@ -140,7 +108,6 @@ function useReveal() {
     return () => obs.disconnect();
   }, []);
   return ref;
-  return ref;
 }
 
 function RevealDiv({ children, className = '', delay = 0, style = {} }) {
@@ -156,7 +123,7 @@ function RevealDiv({ children, className = '', delay = 0, style = {} }) {
   );
 }
 
-export default function SRHHomepage({ currentUser, onLogout }) {
+export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
   const [activeNav, setActiveNav] = useState('People');
   const [showEmployeeForm, setShowEmployeeForm] = useState(false);
   const [employeeForm, setEmployeeForm] = useState(DEFAULT_EMPLOYEE_FORM);
@@ -172,7 +139,6 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     event.preventDefault();
     setEmployeeStatus('');
     setIsSavingEmployee(true);
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/employees`, {
         method: 'POST',
@@ -182,11 +148,10 @@ export default function SRHHomepage({ currentUser, onLogout }) {
         },
         body: JSON.stringify(employeeForm),
       });
-
-      if (!response.ok) {
-        throw new Error('Could not add employee. Check your admin login and form values.');
-      }
-
+      if (!response.ok)
+        throw new Error(
+          'Could not add employee. Check your admin login and form values.',
+        );
       const createdEmployee = await response.json();
       setEmployeeForm(DEFAULT_EMPLOYEE_FORM);
       setEmployeeStatus(`${createdEmployee.name} was added successfully.`);
@@ -221,9 +186,17 @@ export default function SRHHomepage({ currentUser, onLogout }) {
               Sign out
             </button>
             {isAdmin ? (
-              <button className="btn-primary" onClick={() => setShowEmployeeForm(true)}>
-                + Add Employee
-              </button>
+              <>
+                <button className="btn-ghost" onClick={onGoToDemand}>
+                  Demand Management
+                </button>
+                <button
+                  className="btn-primary"
+                  onClick={() => setShowEmployeeForm(true)}
+                >
+                  + Add Employee
+                </button>
+              </>
             ) : (
               <button className="btn-primary">Get started →</button>
             )}
@@ -274,7 +247,6 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                 </span>
               </div>
               <div className="preview-body">
-                {/* Sidebar */}
                 <div className="preview-sidebar">
                   <div className="sidebar-logo">
                     <div className="sidebar-logo-mark">S</div>
@@ -293,14 +265,17 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                   ))}
                 </div>
 
-                {/* Main content */}
                 <div className="preview-main">
                   <div className="preview-topbar">
                     <div className="preview-topbar-title">People View</div>
                     <div className="preview-topbar-right">
-                      <button className="mini-btn" type="button">Filter</button>
-                      <button className="mini-btn" type="button">Export</button>
-                      {isAdmin ? (
+                      <button className="mini-btn" type="button">
+                        Filter
+                      </button>
+                      <button className="mini-btn" type="button">
+                        Export
+                      </button>
+                      {isAdmin && (
                         <button
                           className="mini-btn accent"
                           type="button"
@@ -308,7 +283,7 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                         >
                           + Add Employee
                         </button>
-                      ) : null}
+                      )}
                     </div>
                   </div>
 
@@ -517,7 +492,8 @@ export default function SRHHomepage({ currentUser, onLogout }) {
         </RevealDiv>
       </section>
 
-      {isAdmin && showEmployeeForm ? (
+      {/* ADD EMPLOYEE MODAL */}
+      {isAdmin && showEmployeeForm && (
         <div className="employee-modal-backdrop">
           <div
             className="employee-modal"
@@ -534,7 +510,7 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                 className="employee-close"
                 type="button"
                 onClick={() => setShowEmployeeForm(false)}
-                aria-label="Close add employee form"
+                aria-label="Close"
               >
                 X
               </button>
@@ -545,36 +521,35 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                 <span>Name</span>
                 <input
                   value={employeeForm.name}
-                  onChange={(event) => updateEmployeeForm('name', event.target.value)}
+                  onChange={(e) => updateEmployeeForm('name', e.target.value)}
                   required
                 />
               </label>
-
               <label className="employee-field">
                 <span>Email</span>
                 <input
                   type="email"
                   value={employeeForm.email}
-                  onChange={(event) => updateEmployeeForm('email', event.target.value)}
+                  onChange={(e) => updateEmployeeForm('email', e.target.value)}
                   required
                 />
               </label>
-
               <label className="employee-field">
                 <span>Password</span>
                 <input
                   type="password"
                   value={employeeForm.password}
-                  onChange={(event) => updateEmployeeForm('password', event.target.value)}
+                  onChange={(e) =>
+                    updateEmployeeForm('password', e.target.value)
+                  }
                   required
                 />
               </label>
-
               <label className="employee-field">
                 <span>Role</span>
                 <select
                   value={employeeForm.role}
-                  onChange={(event) => updateEmployeeForm('role', event.target.value)}
+                  onChange={(e) => updateEmployeeForm('role', e.target.value)}
                 >
                   {ROLE_OPTIONS.map((role) => (
                     <option key={role} value={role}>
@@ -584,22 +559,31 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                 </select>
               </label>
 
-              {employeeStatus ? (
+              {employeeStatus && (
                 <div className="employee-form-status">{employeeStatus}</div>
-              ) : null}
+              )}
 
               <div className="employee-form-actions">
-                <button className="btn-ghost" type="button" onClick={() => setShowEmployeeForm(false)}>
+                <button
+                  className="btn-ghost"
+                  type="button"
+                  onClick={() => setShowEmployeeForm(false)}
+                >
                   Cancel
                 </button>
-                <button className="btn-primary" type="submit" disabled={isSavingEmployee}>
+                <button
+                  className="btn-primary"
+                  type="submit"
+                  disabled={isSavingEmployee}
+                >
                   {isSavingEmployee ? 'Saving...' : 'Save Employee'}
                 </button>
               </div>
             </form>
           </div>
         </div>
-      ) : null}
+      )}
+
       {/* FOOTER */}
       <footer>
         <div className="footer-left">
@@ -616,5 +600,3 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     </>
   );
 }
-
-

@@ -23,8 +23,15 @@ public class Employee {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    public Employee() {
-    }
+    // Comma-separated skills e.g. "Java,Spring Boot,React"
+    @Column(length = 1000)
+    private String skills;
+
+    // Years of total experience
+    @Column(name = "experience_years")
+    private Integer experienceYears;
+
+    public Employee() {}
 
     public Employee(Long id, String name, String email, String password, Role role) {
         this.id = id;
@@ -34,43 +41,24 @@ public class Employee {
         this.role = role;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getName() {
-        return name;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public Role getRole() {
-        return role;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getSkills() { return skills; }
+    public void setSkills(String skills) { this.skills = skills; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
+    public Integer getExperienceYears() { return experienceYears; }
+    public void setExperienceYears(Integer experienceYears) { this.experienceYears = experienceYears; }
 }

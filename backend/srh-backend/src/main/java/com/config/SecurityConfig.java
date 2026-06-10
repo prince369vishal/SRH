@@ -39,7 +39,10 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Employee management — ADMIN only
                         .requestMatchers("/api/employees/**").hasRole("ADMIN")
+                        // Project management — ADMIN only (GET is also ADMIN for now)
+                        .requestMatchers("/api/projects/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

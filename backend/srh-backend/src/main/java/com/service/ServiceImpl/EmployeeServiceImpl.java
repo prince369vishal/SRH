@@ -49,6 +49,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setEmail(employeeRequest.getEmail());
         employee.setPassword(passwordEncoder.encode(employeeRequest.getPassword()));
         employee.setRole(employeeRequest.getRole());
+        employee.setSkills(employeeRequest.getSkills());
+        employee.setExperienceYears(employeeRequest.getExperienceYears());
 
         return toResponse(employeeRepository.save(employee));
     }
@@ -64,13 +66,10 @@ public class EmployeeServiceImpl implements EmployeeService {
             employee.setEmail(employeeRequest.getEmail());
         }
 
-        if (employeeRequest.getName() != null) {
-            employee.setName(employeeRequest.getName());
-        }
-
-        if (employeeRequest.getRole() != null) {
-            employee.setRole(employeeRequest.getRole());
-        }
+        if (employeeRequest.getName() != null) employee.setName(employeeRequest.getName());
+        if (employeeRequest.getRole() != null) employee.setRole(employeeRequest.getRole());
+        if (employeeRequest.getSkills() != null) employee.setSkills(employeeRequest.getSkills());
+        if (employeeRequest.getExperienceYears() != null) employee.setExperienceYears(employeeRequest.getExperienceYears());
 
         if (employeeRequest.getPassword() != null && !employeeRequest.getPassword().isBlank()) {
             employee.setPassword(passwordEncoder.encode(employeeRequest.getPassword()));
@@ -95,7 +94,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employee.getId(),
                 employee.getName(),
                 employee.getEmail(),
-                employee.getRole()
+                employee.getRole(),
+                employee.getSkills(),
+                employee.getExperienceYears()
         );
     }
 }
