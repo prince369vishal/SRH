@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import SRHHomepage from './components/SRHHomepage.jsx';
 import './components/SRHHomepage.css';
-
-const API_BASE_URL = 'http://localhost:8080';
+import { API_BASE_URL } from './config.js';
 
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('admin@example.com');
@@ -45,7 +44,7 @@ function LoginPage({ onLogin }) {
           <div className="auth-kicker">Smart Resource Hiring</div>
           <h1 className="auth-title">Sign in to SRH Portal</h1>
           <p className="auth-copy">
-            Use the backend running on localhost:8080 to receive a JWT and open
+            Use the backend running on {API_BASE_URL} to receive a JWT and open
             the resource dashboard.
           </p>
         </div>

@@ -7,7 +7,6 @@ import com.entity.Employee;
 import com.repository.EmployeeRepository;
 import com.service.ServiceInterface.AuthService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -15,16 +14,16 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final JwtUtil jwtUtil;
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
-    public AuthServiceImpl(JwtUtil jwtUtil,
-                           EmployeeRepository employeeRepository,
-                           PasswordEncoder passwordEncoder) {
-        this.jwtUtil = jwtUtil;
+    public AuthServiceImpl(EmployeeRepository employeeRepository,
+                           PasswordEncoder passwordEncoder,
+                           JwtUtil jwtUtil) {
         this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -32,31 +31,22 @@ public class AuthServiceImpl implements AuthService {
         Employee employee = employeeRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
 
-        String storedPassword = employee.getPassword();
-        boolean isBcryptPassword = storedPassword != null && storedPassword.startsWith("$2");
-        boolean passwordMatches = isBcryptPassword
-                ? passwordEncoder.matches(request.getPassword(), storedPassword)
-                : request.getPassword().equals(storedPassword);
+        if (!Boolean.TRUE.equals(employee.getActive())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Employee account is inactive");
+        }
 
-        if (!passwordMatches) {
+        if (!passwordEncoder.matches(request.getPassword(), employee.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
-        if (!isBcryptPassword) {
-            employee.setPassword(passwordEncoder.encode(request.getPassword()));
-            employeeRepository.save(employee);
-        }
-
         String role = employee.getRole().name();
-        String token = jwtUtil.generateToken(employee.getEmail(), role);
-        return new LoginResponse(token, role, employee.getEmail());
-    }
-
-    @Override
-    public ResponseEntity<String> logout(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body("Invalid token format");
-        }
-        return ResponseEntity.ok("Logged out successfully");
+        return new LoginResponse(
+                jwtUtil.generateToken(employee.getEmail(), role),
+                role,
+                employee.getEmail(),
+                employee.getId(),
+                employee.getFirstName(),
+                employee.getLastName()
+        );
     }
 }
