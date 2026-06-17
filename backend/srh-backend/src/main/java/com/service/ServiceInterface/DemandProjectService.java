@@ -1,7 +1,9 @@
 package com.service.ServiceInterface;
 
 import com.dto.request.DemandProjectRequest;
+import com.dto.request.ShortlistRequest;
 import com.dto.response.DemandProjectResponse;
+import com.dto.response.EmployeeResponse;
 import java.util.List;
 
 public interface DemandProjectService {
@@ -15,4 +17,8 @@ public interface DemandProjectService {
     DemandProjectResponse updateProject(Long id, DemandProjectRequest request);
 
     void deleteProject(Long id);
+
+    List<EmployeeResponse> getMatchedEmployees(Long projectId);
+
+    List<EmployeeResponse> shortlistEmployees(Long projectId, ShortlistRequest request);
 }

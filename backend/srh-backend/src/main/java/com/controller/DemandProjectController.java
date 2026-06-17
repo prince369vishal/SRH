@@ -1,7 +1,9 @@
 package com.controller;
 
 import com.dto.request.DemandProjectRequest;
+import com.dto.request.ShortlistRequest;
 import com.dto.response.DemandProjectResponse;
+import com.dto.response.EmployeeResponse;
 import com.service.ServiceInterface.DemandProjectService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -66,5 +68,20 @@ public class DemandProjectController {
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         demandProjectService.deleteProject(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Get employees with matching skills for a demand project")
+    @GetMapping("/{id}/matched-employees")
+    public ResponseEntity<List<EmployeeResponse>> getMatchedEmployees(@PathVariable Long id) {
+        return ResponseEntity.ok(demandProjectService.getMatchedEmployees(id));
+    }
+
+    @Operation(summary = "Shortlist employees for a demand project")
+    @PutMapping("/{id}/shortlist")
+    public ResponseEntity<List<EmployeeResponse>> shortlistEmployees(
+            @PathVariable Long id,
+            @Valid @RequestBody ShortlistRequest request
+    ) {
+        return ResponseEntity.ok(demandProjectService.shortlistEmployees(id, request));
     }
 }

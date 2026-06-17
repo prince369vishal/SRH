@@ -711,3 +711,154 @@ footer {
         display: none;
     }
 }
+
+/* Project Dashboard Styles */
+.project-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.dashboard-header-card {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--navy-2), rgba(15, 32, 64, 0.4));
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+
+.dashboard-project-kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cyan);
+    font-weight: 600;
+}
+
+.dashboard-project-name {
+    font-family: var(--font-display);
+    font-size: 28px;
+    margin-top: 4px;
+    color: var(--text);
+}
+
+.dashboard-project-desc {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    max-width: 800px;
+}
+
+.project-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.detail-value.highlighted-skills {
+    color: var(--cyan);
+}
+
+.table-subtitle-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+}
+
+.table-loading-spinner {
+    padding: 48px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+}
+
+.project-empty-state {
+    padding: 48px;
+    text-align: center;
+}
+
+.project-empty-state h3 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.project-empty-state p {
+    color: var(--text-dim);
+    margin: 0 auto;
+}
+
+.row-selected {
+    background: rgba(0, 212, 255, 0.04) !important;
+}
+
+.clickable-row:hover {
+    background: rgba(255, 255, 255, 0.02) !important;
+    transition: background 0.2s var(--ease);
+}
+
+.candidate-skills-cell {
+    color: var(--cyan);
+    font-size: 13px;
+}
+
+.status-project-open {
+    background: var(--cyan-dim) !important;
+    color: var(--cyan) !important;
+    border: 1px solid rgba(0, 212, 255, 0.3) !important;
+}
+
+.status-project-in_progress {
+    background: var(--gold-dim) !important;
+    color: var(--gold) !important;
+    border: 1px solid rgba(240, 165, 0, 0.3) !important;
+}
+
+.status-project-fulfilled {
+    background: rgba(46, 213, 115, 0.12) !important;
+    color: #2ed573 !important;
+    border: 1px solid rgba(46, 213, 115, 0.3) !important;
+}
+
+.status-project-closed {
+    background: rgba(255, 71, 87, 0.12) !important;
+    color: #ff4757 !important;
+    border: 1px solid rgba(255, 71, 87, 0.3) !important;
+}
+
+.shortlist-bulk-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
