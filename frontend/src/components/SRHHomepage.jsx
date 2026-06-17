@@ -312,7 +312,6 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     event.preventDefault();
     setStatus('');
     setIsSavingEmployee(true);
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/employees`, {
         method: 'POST',

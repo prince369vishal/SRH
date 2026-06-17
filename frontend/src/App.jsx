@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import SRHHomepage from './components/SRHHomepage.jsx';
+import DemandManagement from './components/DemandManagement.jsx';
 import './components/SRHHomepage.css';
 import { API_BASE_URL } from './config.js';
 
@@ -17,9 +18,7 @@ function LoginPage({ onLogin }) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
@@ -55,7 +54,7 @@ function LoginPage({ onLogin }) {
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </label>
@@ -65,7 +64,7 @@ function LoginPage({ onLogin }) {
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </label>
@@ -83,18 +82,37 @@ function LoginPage({ onLogin }) {
 
 export default function App() {
   const [auth, setAuth] = useState(() => {
-    const savedAuth = localStorage.getItem('srhAuth');
-    return savedAuth ? JSON.parse(savedAuth) : null;
+    const saved = localStorage.getItem('srhAuth');
+    return saved ? JSON.parse(saved) : null;
   });
+
+  const [page, setPage] = useState('home');
 
   function handleLogout() {
     localStorage.removeItem('srhAuth');
     setAuth(null);
+    setPage('home');
   }
 
   if (!auth?.token) {
     return <LoginPage onLogin={setAuth} />;
   }
 
-  return <SRHHomepage currentUser={auth} onLogout={handleLogout} />;
+  if (page === 'demand') {
+    return (
+      <DemandManagement
+        currentUser={auth}
+        onBack={() => setPage('home')}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  return (
+    <SRHHomepage
+      currentUser={auth}
+      onLogout={handleLogout}
+      onGoToDemand={() => setPage('demand')}
+    />
+  );
 }
