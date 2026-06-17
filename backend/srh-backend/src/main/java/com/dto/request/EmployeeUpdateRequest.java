@@ -10,6 +10,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Schema(description = "Employee update payload. Null fields are left unchanged.")
@@ -38,7 +39,8 @@ public class EmployeeUpdateRequest {
     private LocalDate joiningDate;
     private EmployeeStatus status;
     private LocalDate benchStartDate;
-    private Long performanceManagerId;
+    private Long managerId;
+    private BigDecimal experienceYears;
     private Boolean firstLogin;
     private Boolean active;
     private List<SkillEntry> skills;
@@ -109,9 +111,13 @@ public class EmployeeUpdateRequest {
 
     public void setBenchStartDate(LocalDate benchStartDate) { this.benchStartDate = benchStartDate; }
 
-    public Long getPerformanceManagerId() { return performanceManagerId; }
+    public Long getManagerId() { return managerId; }
 
-    public void setPerformanceManagerId(Long performanceManagerId) { this.performanceManagerId = performanceManagerId; }
+    public void setManagerId(Long managerId) { this.managerId = managerId; }
+
+    public BigDecimal getExperienceYears() { return experienceYears; }
+
+    public void setExperienceYears(BigDecimal experienceYears) { this.experienceYears = experienceYears; }
 
     public Boolean getFirstLogin() { return firstLogin; }
 

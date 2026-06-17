@@ -6,6 +6,7 @@ import com.repository.EmployeeRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
@@ -13,22 +14,52 @@ public class DataSeeder {
 
     @Bean
     public CommandLineRunner seedAdmin(EmployeeRepository employeeRepository,
-                                       PasswordEncoder passwordEncoder) {
-        return args -> employeeRepository.findByEmail("admin@example.com")
-                .orElseGet(() -> {
-                    Employee admin = new Employee();
-                    admin.setEmployeeCode("ADMIN-001");
-                    admin.setEmail("admin@example.com");
-                    admin.setPasswordHash(passwordEncoder.encode("admin123"));
-                    admin.setRole(Role.ADMIN);
-                    admin.setFirstName("Admin");
-                    admin.setLastName("User");
-                    admin.setDepartment("Administration");
-                    admin.setDesignation("System Administrator");
-                    admin.setLocation("Bangalore");
-                    admin.setActive(true);
-                    admin.setFirstLogin(false);
-                    return employeeRepository.save(admin);
-                });
+                                       PasswordEncoder passwordEncoder,
+                                       JdbcTemplate jdbcTemplate) {
+        return args -> {
+            ensureRoleConstraintSupportsProjectAdministrator(jdbcTemplate);
+            seedUser(employeeRepository, passwordEncoder, "ADMIN-001", "admin@example.com", "admin123",
+                    Role.ADMIN, "Admin", "User", "Administration", "System Administrator");
+            seedUser(employeeRepository, passwordEncoder, "OPER-001", "operator@example.com", "operator123",
+                    Role.OPERATOR, "Operator", "User", "Operations", "Resource Operator");
+            seedUser(employeeRepository, passwordEncoder, "PADMIN-001", "project.admin@example.com", "project123",
+                    Role.PROJECT_ADMINISTRATOR, "Project", "Administrator", "Delivery", "Project Administrator");
+        };
+    }
+
+    private void ensureRoleConstraintSupportsProjectAdministrator(JdbcTemplate jdbcTemplate) {
+        jdbcTemplate.execute("ALTER TABLE employees DROP CONSTRAINT IF EXISTS employees_role_check");
+        jdbcTemplate.execute("""
+                ALTER TABLE employees
+                ADD CONSTRAINT employees_role_check
+                CHECK (role IN ('ADMIN', 'EMPLOYEE', 'OPERATOR', 'PROJECT_ADMIN', 'PROJECT_ADMINISTRATOR'))
+                """);
+    }
+
+    private void seedUser(EmployeeRepository employeeRepository,
+                          PasswordEncoder passwordEncoder,
+                          String employeeCode,
+                          String email,
+                          String password,
+                          Role role,
+                          String firstName,
+                          String lastName,
+                          String department,
+                          String designation) {
+        employeeRepository.findByEmail(email).orElseGet(() -> {
+            Employee employee = new Employee();
+            employee.setEmployeeCode(employeeCode);
+            employee.setEmail(email);
+            employee.setPasswordHash(passwordEncoder.encode(password));
+            employee.setRole(role);
+            employee.setFirstName(firstName);
+            employee.setLastName(lastName);
+            employee.setDepartment(department);
+            employee.setDesignation(designation);
+            employee.setLocation("Bangalore");
+            employee.setActive(true);
+            employee.setFirstLogin(false);
+            return employeeRepository.save(employee);
+        });
     }
 }

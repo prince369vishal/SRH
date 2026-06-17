@@ -8,6 +8,7 @@ import com.enums.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Schema(description = "Employee details returned by the API. Passwords are never returned.")
@@ -33,7 +34,8 @@ public class EmployeeResponse {
     private LocalDate joiningDate;
     private EmployeeStatus status;
     private LocalDate benchStartDate;
-    private Long performanceManagerId;
+    private Long managerId;
+    private BigDecimal experienceYears;
     private Boolean firstLogin;
     private Boolean active;
     private List<SkillEntry> skills;
@@ -43,7 +45,7 @@ public class EmployeeResponse {
     public EmployeeResponse(Long id, String employeeCode, String email, Role role, String firstName, String lastName,
                             String phoneNumber, String department, String designation, String location,
                             LocalDate joiningDate, EmployeeStatus status, LocalDate benchStartDate,
-                            Long performanceManagerId, Boolean firstLogin, Boolean active,
+                            Long managerId, BigDecimal experienceYears, Boolean firstLogin, Boolean active,
                             List<SkillEntry> skills, List<Certification> certifications,
                             List<ProjectHistory> projectHistory) {
         this.id = id;
@@ -59,7 +61,8 @@ public class EmployeeResponse {
         this.joiningDate = joiningDate;
         this.status = status;
         this.benchStartDate = benchStartDate;
-        this.performanceManagerId = performanceManagerId;
+        this.managerId = managerId;
+        this.experienceYears = experienceYears;
         this.firstLogin = firstLogin;
         this.active = active;
         this.skills = skills;
@@ -99,7 +102,9 @@ public class EmployeeResponse {
 
     public LocalDate getBenchStartDate() { return benchStartDate; }
 
-    public Long getPerformanceManagerId() { return performanceManagerId; }
+    public Long getManagerId() { return managerId; }
+
+    public BigDecimal getExperienceYears() { return experienceYears; }
 
     public Boolean getFirstLogin() { return firstLogin; }
 

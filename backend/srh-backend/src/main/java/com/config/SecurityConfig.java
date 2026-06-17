@@ -4,6 +4,7 @@ import com.filter.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,7 +18,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
+
 
     private final JwtAuthFilter jwtAuthFilter;
 
@@ -43,8 +46,10 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "PROJECT_ADMIN", "OPERATOR")
-                        .requestMatchers("/api/employees/me").hasAnyRole("ADMIN", "PROJECT_ADMIN", "OPERATOR", "EMPLOYEE")
+                        .requestMatchers("/api/operator/**").hasRole("OPERATOR")
+                        .requestMatchers("/api/demands/**").hasRole("PROJECT_ADMINISTRATOR")
+                        .requestMatchers("/api/admin/employees/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers("/api/employees/me").hasAnyRole("ADMIN", "PROJECT_ADMINISTRATOR", "PROJECT_ADMIN", "OPERATOR", "EMPLOYEE")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -70,3 +75,4 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+

@@ -36,7 +36,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
+        String token = normalizeBearerToken(authHeader);
 
         if (jwtUtil.isTokenValid(token)) {
             String email = jwtUtil.extractEmail(token);
@@ -53,5 +53,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String normalizeBearerToken(String authHeader) {
+        String token = authHeader.substring(7).trim();
+
+        while (token.regionMatches(true, 0, "Bearer ", 0, 7)) {
+            token = token.substring(7).trim();
+        }
+
+        if ((token.startsWith("\"") && token.endsWith("\"")) ||
+                (token.startsWith("'") && token.endsWith("'"))) {
+            token = token.substring(1, token.length() - 1).trim();
+        }
+
+        return token;
     }
 }
