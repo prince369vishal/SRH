@@ -16,6 +16,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Min;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,7 +56,8 @@ public class EmployeeRequest {
     private LocalDate joiningDate;
     private EmployeeStatus status;
     private LocalDate benchStartDate;
-    private Long performanceManagerId;
+    private Long managerId;
+    private BigDecimal experienceYears;
     private Boolean active;
     private List<SkillEntry> skills = new ArrayList<>();
     private List<Certification> certifications = new ArrayList<>();
@@ -120,9 +122,13 @@ public class EmployeeRequest {
 
     public void setBenchStartDate(LocalDate benchStartDate) { this.benchStartDate = benchStartDate; }
 
-    public Long getPerformanceManagerId() { return performanceManagerId; }
+    public Long getManagerId() { return managerId; }
 
-    public void setPerformanceManagerId(Long performanceManagerId) { this.performanceManagerId = performanceManagerId; }
+    public void setManagerId(Long managerId) { this.managerId = managerId; }
+
+    public BigDecimal getExperienceYears() { return experienceYears; }
+
+    public void setExperienceYears(BigDecimal experienceYears) { this.experienceYears = experienceYears; }
 
     public Boolean getActive() { return active; }
 
