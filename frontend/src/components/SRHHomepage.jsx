@@ -5,7 +5,6 @@ import { API_BASE_URL } from '../config.js';
 
 const ROLE_OPTIONS = ['EMPLOYEE', 'OPERATOR', 'PROJECT_ADMINISTRATOR', 'ADMIN'];
 const EMPLOYEE_STATUS_OPTIONS = ['ON_BENCH', 'SHORTLISTED', 'ALLOCATED'];
-const PROJECT_STATUS_OPTIONS = ['OPEN', 'IN_PROGRESS', 'FULFILLED', 'CLOSED'];
 
 const DEFAULT_EMPLOYEE_FORM = {
   employeeCode: '',
@@ -62,6 +61,14 @@ function listToText(items, key) {
 
 function projectSkillsToText(skills) {
   return (skills || []).filter(Boolean).join(', ');
+}
+
+function matchedSkillsText(employee, requiredSkills) {
+  const required = new Set((requiredSkills || []).map((skill) => skill.toLowerCase()));
+  return (employee?.skills || [])
+    .map((skill) => skill.skillName)
+    .filter((skillName) => required.has(skillName.toLowerCase()))
+    .join(', ') || '-';
 }
 
 function splitText(value) {
@@ -209,6 +216,11 @@ export default function SRHHomepage({ currentUser, onLogout }) {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [matchedEmployees, setMatchedEmployees] = useState([]);
+  const [isLoadingMatched, setIsLoadingMatched] = useState(false);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
+  const [isShortlisting, setIsShortlisting] = useState(false);
 
   const navItems = useMemo(() => [
     'Profile',
@@ -279,6 +291,66 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     loadData();
   }, [canManageDemand, canViewEmployees, currentUser?.token]);
 
+  async function fetchMatchedEmployees(projectId) {
+    setIsLoadingMatched(true);
+    setStatus('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/demands/projects/${projectId}/matched-employees`, {
+        headers: authHeaders(currentUser?.token),
+      });
+      if (!response.ok) {
+        throw new Error('Could not fetch matched employees.');
+      }
+      const data = await response.json();
+      setMatchedEmployees(data);
+      setSelectedEmployeeIds([]);
+    } catch (error) {
+      setStatus(error.message || 'Error fetching matched employees.');
+    } finally {
+      setIsLoadingMatched(false);
+    }
+  }
+
+  useEffect(() => {
+    if (selectedProject?.id && activeNav === 'ProjectDashboard') {
+      fetchMatchedEmployees(selectedProject.id);
+    }
+  }, [selectedProject?.id, activeNav]);
+
+  async function handleShortlist(employeeIds) {
+    if (!employeeIds || employeeIds.length === 0) {
+      setStatus('Please select at least one employee to shortlist.');
+      return;
+    }
+    setStatus('');
+    setIsShortlisting(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/demands/projects/${selectedProject.id}/shortlist`, {
+        method: 'PUT',
+        headers: authHeaders(currentUser?.token),
+        body: JSON.stringify({ employeeIds }),
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message || 'Could not shortlist selected employees.');
+      }
+      setStatus(`Successfully shortlisted ${employeeIds.length} employee(s).`);
+      fetchMatchedEmployees(selectedProject.id);
+      if (canViewEmployees) {
+        const employeesResponse = await fetch(`${API_BASE_URL}/api/admin/employees`, {
+          headers: authHeaders(currentUser?.token),
+        });
+        if (employeesResponse.ok) {
+          setEmployees(await employeesResponse.json());
+        }
+      }
+    } catch (error) {
+      setStatus(error.message || 'Error shortlisting employees.');
+    } finally {
+      setIsShortlisting(false);
+    }
+  }
+
   function updateEmployeeForm(field, value) {
     setEmployeeForm((current) => ({ ...current, [field]: value }));
   }
@@ -306,6 +378,11 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     setEditingProject(project);
     setProjectForm(projectToForm(project));
     setShowProjectForm(true);
+  }
+
+  function openProjectDashboard(project) {
+    setSelectedProject(project);
+    setActiveNav('ProjectDashboard');
   }
 
   async function handleCreateEmployee(event) {
@@ -410,7 +487,13 @@ export default function SRHHomepage({ currentUser, onLogout }) {
       setShowProjectForm(false);
       setEditingProject(null);
       setProjectForm(DEFAULT_PROJECT_FORM);
-      setStatus(`${savedProject.projectName} demand was saved.`);
+      if (!editingProject) {
+        openProjectDashboard(savedProject);
+        setStatus(`${savedProject.projectName} was created. Select employees to shortlist below.`);
+      } else {
+        setSelectedProject((current) => (current?.id === savedProject.id ? savedProject : current));
+        setStatus(`${savedProject.projectName} demand was updated.`);
+      }
     } catch (error) {
       setStatus(error.message || 'Could not save project demand.');
     } finally {
@@ -544,7 +627,10 @@ export default function SRHHomepage({ currentUser, onLogout }) {
     return (
       <div className="table-section">
         <div className="table-header">
-          <span className="table-title">Demand Projects</span>
+          <div>
+            <span className="table-title">Demand Projects</span>
+            <p className="table-subtitle-desc">Click a project row to open its dashboard and match employees</p>
+          </div>
           <span className="table-badge">{isLoading ? 'Loading' : `${projects.length} project(s)`}</span>
         </div>
         <table className="data-table">
@@ -562,7 +648,12 @@ export default function SRHHomepage({ currentUser, onLogout }) {
           </thead>
           <tbody>
             {projects.map((project) => (
-              <tr key={project.id}>
+              <tr
+                key={project.id}
+                className="clickable-row"
+                style={{ cursor: 'pointer' }}
+                onClick={() => openProjectDashboard(project)}
+              >
                 <td style={{ color: 'var(--text)', fontWeight: 600 }}>{project.projectName}</td>
                 <td>{projectSkillsToText(project.requiredSkills) || '-'}</td>
                 <td>{project.requiredExperience || '-'}</td>
@@ -571,13 +662,170 @@ export default function SRHHomepage({ currentUser, onLogout }) {
                 <td>{project.location || '-'}</td>
                 <td><span className="status-pill status-short">{project.status}</span></td>
                 <td>
-                  <button className="mini-btn" type="button" onClick={() => openEditProject(project)}>Edit</button>
-                  <button className="mini-btn danger" type="button" onClick={() => handleDeleteProject(project)}>Delete</button>
+                  <button className="mini-btn" type="button" onClick={(e) => { e.stopPropagation(); openEditProject(project); }}>Edit</button>
+                  <button className="mini-btn danger" type="button" onClick={(e) => { e.stopPropagation(); handleDeleteProject(project); }}>Delete</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+    );
+  }
+
+  function renderProjectDashboard() {
+    if (!selectedProject) return null;
+
+    const allChecked = matchedEmployees.length > 0 && selectedEmployeeIds.length === matchedEmployees.length;
+
+    const handleSelectAll = (e) => {
+      if (e.target.checked) {
+        setSelectedEmployeeIds(matchedEmployees.map(emp => emp.id));
+      } else {
+        setSelectedEmployeeIds([]);
+      }
+    };
+
+    const handleSelectEmployee = (empId) => {
+      setSelectedEmployeeIds(prev => 
+        prev.includes(empId) ? prev.filter(id => id !== empId) : [...prev, empId]
+      );
+    };
+
+    return (
+      <div className="project-dashboard">
+        <div className="dashboard-header-card">
+          <div className="dashboard-header-main">
+            <div>
+              <div className="dashboard-project-kicker">Project Dashboard</div>
+              <h2 className="dashboard-project-name">{selectedProject.projectName}</h2>
+              <p className="dashboard-project-desc">{selectedProject.description || 'No description provided.'}</p>
+            </div>
+            <div className="dashboard-project-meta">
+              <span className={`status-pill status-project-${selectedProject.status.toLowerCase()}`}>
+                {selectedProject.status}
+              </span>
+            </div>
+          </div>
+          
+          <div className="project-details-grid">
+            <div className="detail-item">
+              <span className="detail-label">Required Skills:</span>
+              <span className="detail-value highlighted-skills">
+                {projectSkillsToText(selectedProject.requiredSkills) || 'None specified'}
+              </span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Experience Required:</span>
+              <span className="detail-value">{selectedProject.requiredExperience ? `${selectedProject.requiredExperience} years` : 'Any'}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Resources Needed:</span>
+              <span className="detail-value">{selectedProject.numberOfResourcesRequired}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Department:</span>
+              <span className="detail-value">{selectedProject.department || 'General'}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Location:</span>
+              <span className="detail-value">{selectedProject.location || 'Remote'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="table-section">
+          <div className="table-header">
+            <div>
+              <span className="table-title">Matched Employees ({matchedEmployees.length})</span>
+              <p className="table-subtitle-desc">Employees on bench whose skills match the project's required skills</p>
+            </div>
+            <div className="table-actions-group">
+              <button 
+                className="btn-primary shortlist-bulk-btn" 
+                type="button" 
+                disabled={selectedEmployeeIds.length === 0 || isShortlisting}
+                onClick={() => handleShortlist(selectedEmployeeIds)}
+              >
+                {isShortlisting ? 'Shortlisting...' : `Shortlist Selected (${selectedEmployeeIds.length})`}
+              </button>
+            </div>
+          </div>
+
+          {isLoadingMatched ? (
+            <div className="table-loading-spinner">Loading matched candidates...</div>
+          ) : matchedEmployees.length === 0 ? (
+            <div className="empty-state project-empty-state">
+              <h3>No matching candidates found</h3>
+              <p>There are currently no employees on the bench whose skills match the required skills of this project.</p>
+            </div>
+          ) : (
+            <table className="data-table matched-data-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '40px', textAlign: 'center' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={allChecked} 
+                      onChange={handleSelectAll} 
+                    />
+                  </th>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Department</th>
+                  <th>Designation</th>
+                  <th>Experience</th>
+                  <th>Matched Skills</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {matchedEmployees.map((employee) => {
+                  const isChecked = selectedEmployeeIds.includes(employee.id);
+                  const isBench = employee.status === 'ON_BENCH';
+                  const empSkills = matchedSkillsText(employee, selectedProject.requiredSkills);
+                  return (
+                    <tr key={employee.id} className={isChecked ? 'row-selected' : ''}>
+                      <td style={{ textAlign: 'center' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isChecked} 
+                          onChange={() => handleSelectEmployee(employee.id)}
+                          disabled={!isBench}
+                        />
+                      </td>
+                      <td>{employee.employeeCode}</td>
+                      <td style={{ color: 'var(--text)', fontWeight: 600 }}>{fullName(employee)}</td>
+                      <td>{employee.department || '-'}</td>
+                      <td>{employee.designation || '-'}</td>
+                      <td>{employee.experienceYears ? `${employee.experienceYears} yrs` : '-'}</td>
+                      <td className="candidate-skills-cell">{empSkills}</td>
+                      <td>
+                        <span className={`status-pill ${employee.status === 'ON_BENCH' ? 'status-bench' : employee.status === 'ALLOCATED' ? 'status-alloc' : 'status-short'}`}>
+                          {employee.status}
+                        </span>
+                      </td>
+                      <td>
+                        <button 
+                          className="mini-btn accent" 
+                          type="button" 
+                          disabled={!isBench || isShortlisting}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShortlist([employee.id]);
+                          }}
+                        >
+                          Shortlist
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     );
   }
@@ -593,7 +841,7 @@ export default function SRHHomepage({ currentUser, onLogout }) {
         </div>
         <div className="nav-links">
           {navItems.map((item) => (
-            <a key={item} href="#" onClick={(event) => { event.preventDefault(); setActiveNav(item); }}>
+            <a key={item} href="#" onClick={(event) => { event.preventDefault(); setActiveNav(item); if (item !== 'Demand') setSelectedProject(null); }}>
               {item}
             </a>
           ))}
@@ -619,8 +867,11 @@ export default function SRHHomepage({ currentUser, onLogout }) {
           {navItems.map((item) => (
             <button
               key={item}
-              className={`sidebar-item ${activeNav === item ? 'active' : ''}`}
-              onClick={() => setActiveNav(item)}
+              className={`sidebar-item ${activeNav === item || (item === 'Demand' && activeNav === 'ProjectDashboard') ? 'active' : ''}`}
+              onClick={() => {
+                setActiveNav(item);
+                if (item !== 'Demand') setSelectedProject(null);
+              }}
               type="button"
             >
               <span>{item.slice(0, 1)}</span>
@@ -633,47 +884,63 @@ export default function SRHHomepage({ currentUser, onLogout }) {
           <div className="preview-topbar">
             <div>
               <div className="preview-topbar-title">
-                {activeNav === 'Demand' ? 'Demand Management' : activeNav === 'Bulk Import' ? 'Bulk Import' : activeNav === 'Profile' ? 'Employee Profile' : 'People Dashboard'}
+                {activeNav === 'Demand' ? 'Demand Management' : activeNav === 'Bulk Import' ? 'Bulk Import' : activeNav === 'Profile' ? 'Employee Profile' : activeNav === 'ProjectDashboard' ? 'Project Dashboard' : 'People Dashboard'}
               </div>
               <div className="workspace-subtitle">
-                {isAdmin
-                  ? 'ADMIN can manually add and edit employee profiles.'
-                  : isOperator
-                    ? 'OPERATOR can bulk import and view employees.'
-                    : isProjectAdministrator
-                      ? 'PROJECT_ADMINISTRATOR can create and manage project demand.'
-                      : 'Employees can view their profile and update allowed fields.'}
+                {activeNav === 'ProjectDashboard'
+                  ? `Matching employees for project: ${selectedProject?.projectName}`
+                  : isAdmin
+                    ? 'ADMIN can manually add and edit employee profiles.'
+                    : isOperator
+                      ? 'OPERATOR can bulk import and view employees.'
+                      : isProjectAdministrator
+                        ? 'PROJECT_ADMINISTRATOR can create and manage project demand.'
+                        : 'Employees can view their profile and update allowed fields.'}
               </div>
             </div>
             <div className="preview-topbar-right">
+              {activeNav === 'ProjectDashboard' ? (
+                <button 
+                  className="mini-btn" 
+                  type="button" 
+                  onClick={() => { 
+                    setActiveNav('Demand'); 
+                    setSelectedProject(null); 
+                  }}
+                >
+                  &larr; Back to Demand
+                </button>
+              ) : null}
               {canManageDemand && activeNav === 'Demand' ? <button className="mini-btn accent" type="button" onClick={openCreateProject}>New Demand</button> : null}
               {canImportEmployees && activeNav === 'Bulk Import' ? <button className="mini-btn accent" type="button" onClick={() => setShowImportForm(true)}>Upload File</button> : null}
             </div>
           </div>
 
           <div className="preview-content workspace-content">
-            <div className="metrics-row">
-              <div className="metric-card cyan">
-                <div className="metric-label">On Bench</div>
-                <div className="metric-value">{metrics.bench}</div>
-                <div className="metric-sub">Available now</div>
+            {activeNav !== 'ProjectDashboard' ? (
+              <div className="metrics-row">
+                <div className="metric-card cyan">
+                  <div className="metric-label">On Bench</div>
+                  <div className="metric-value">{metrics.bench}</div>
+                  <div className="metric-sub">Available now</div>
+                </div>
+                <div className="metric-card gold">
+                  <div className="metric-label">Shortlisted</div>
+                  <div className="metric-value">{metrics.shortlisted}</div>
+                  <div className="metric-sub">In consideration</div>
+                </div>
+                <div className="metric-card green">
+                  <div className="metric-label">Allocated</div>
+                  <div className="metric-value">{metrics.allocated}</div>
+                  <div className="metric-sub">Active projects</div>
+                </div>
+                <div className="metric-card">
+                  <div className="metric-label">{canManageDemand ? 'Demands' : 'Profiles'}</div>
+                  <div className="metric-value">{canManageDemand ? metrics.demand : metrics.total}</div>
+                  <div className="metric-sub">{canManageDemand ? 'Open workspace' : 'Visible records'}</div>
+                </div>
               </div>
-              <div className="metric-card gold">
-                <div className="metric-label">Shortlisted</div>
-                <div className="metric-value">{metrics.shortlisted}</div>
-                <div className="metric-sub">In consideration</div>
-              </div>
-              <div className="metric-card green">
-                <div className="metric-label">Allocated</div>
-                <div className="metric-value">{metrics.allocated}</div>
-                <div className="metric-sub">Active projects</div>
-              </div>
-              <div className="metric-card">
-                <div className="metric-label">{canManageDemand ? 'Demands' : 'Profiles'}</div>
-                <div className="metric-value">{canManageDemand ? metrics.demand : metrics.total}</div>
-                <div className="metric-sub">{canManageDemand ? 'Open workspace' : 'Visible records'}</div>
-              </div>
-            </div>
+            ) : null}
 
             {status ? <div className="employee-form-status">{status}</div> : null}
 
@@ -686,6 +953,7 @@ export default function SRHHomepage({ currentUser, onLogout }) {
               </div>
             ) : null}
             {(activeNav === 'People' || activeNav === 'Profile') ? renderPeopleTable() : null}
+            {activeNav === 'ProjectDashboard' && selectedProject ? renderProjectDashboard() : null}
           </div>
         </section>
       </main>
@@ -860,12 +1128,7 @@ function ProjectModal({ form, isSaving, isEditing, onChange, onSubmit, onClose }
           <Field label="Number of Resources Required" type="number" min="1" value={form.numberOfResourcesRequired} onChange={(value) => onChange('numberOfResourcesRequired', value)} required />
           <Field label="Department" value={form.department} onChange={(value) => onChange('department', value)} />
           <Field label="Location" value={form.location} onChange={(value) => onChange('location', value)} />
-          <label className="employee-field">
-            <span>Status</span>
-            <select value={form.status} onChange={(event) => onChange('status', event.target.value)}>
-              {PROJECT_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
-            </select>
-          </label>
+
 
           <div className="employee-form-actions employee-form-actions-wide">
             <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>
