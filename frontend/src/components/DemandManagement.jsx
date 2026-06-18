@@ -10,12 +10,12 @@ import {
 } from '../api/projectApi';
 
 const BADGE_COLORS = [
-  '#E8F4FD,#1A6FA8',
-  '#FEF3E2,#B45309',
-  '#EDFAF4,#166534',
-  '#FDF2F8,#9D174D',
-  '#EEF2FF,#4338CA',
-  '#FFF7ED,#C2410C',
+  'rgba(0,212,255,0.12),#00d4ff',
+  'rgba(240,165,0,0.12),#f0a500',
+  'rgba(34,197,94,0.12),#22c55e',
+  'rgba(167,139,250,0.12),#a78bfa',
+  'rgba(13,110,253,0.15),#3d8bfd',
+  'rgba(251,146,60,0.12),#fb923c',
 ];
 function skillColor(skill) {
   let h = 0;
@@ -70,9 +70,9 @@ function employeeSkills(employee) {
 
 const StatusPill = ({ status }) => {
   const colors = {
-    OPEN: { bg: '#DCFCE7', text: '#166534' },
-    IN_PROGRESS: { bg: '#FEF9C3', text: '#854D0E' },
-    CLOSED: { bg: '#F1F5F9', text: '#64748B' },
+    OPEN: { bg: 'rgba(34,197,94,0.12)', text: '#22c55e' },
+    IN_PROGRESS: { bg: 'rgba(240,165,0,0.12)', text: '#f0a500' },
+    CLOSED: { bg: 'rgba(255,255,255,0.06)', text: '#7a8fa8' },
   };
   const { bg, text } = colors[status] || colors.OPEN;
   return (
@@ -170,7 +170,7 @@ function ProjectForm({ initial, onSave, onCancel }) {
         }}
       >
         <h3
-          style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#1E293B' }}
+          style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#e8edf5' }}
         >
           Requirements ({requirements.length})
         </h3>
@@ -192,7 +192,7 @@ function ProjectForm({ initial, onSave, onCancel }) {
               marginBottom: 10,
             }}
           >
-            <span style={{ fontWeight: 600, color: '#475569', fontSize: 13 }}>
+            <span style={{ fontWeight: 600, color: '#7a8fa8', fontSize: 13 }}>
               Requirement #{i + 1}
             </span>
             {requirements.length > 1 && (
@@ -327,10 +327,10 @@ function MatchPanel({ projectId, requirement, onShortlisted }) {
         }}
       >
         <div>
-          <div style={{ fontWeight: 700, color: '#1E293B', fontSize: 14 }}>
+          <div style={{ fontWeight: 700, color: '#e8edf5', fontSize: 14 }}>
             {requirement.roleName}
           </div>
-          <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: '#7a8fa8', marginTop: 2 }}>
             {requirement.numberOfPeople} needed ·{' '}
             {requirement.minExperienceYears}+ yrs
           </div>
@@ -366,7 +366,7 @@ function MatchPanel({ projectId, requirement, onShortlisted }) {
               <div
                 style={{
                   fontSize: 12,
-                  color: '#64748B',
+                  color: '#7a8fa8',
                   marginTop: 10,
                   marginBottom: 6,
                 }}
@@ -395,12 +395,12 @@ function MatchPanel({ projectId, requirement, onShortlisted }) {
                           style={{
                             fontWeight: 600,
                             fontSize: 13,
-                            color: '#1E293B',
+                            color: '#e8edf5',
                           }}
                         >
                           {name}
                         </div>
-                        <div style={{ fontSize: 11, color: '#64748B' }}>
+                        <div style={{ fontSize: 11, color: '#7a8fa8' }}>
                           {emp.experienceYears || 0} yrs experience -{' '}
                           {emp.status}
                         </div>
@@ -431,7 +431,7 @@ function MatchPanel({ projectId, requirement, onShortlisted }) {
                   <span
                     style={{
                       alignSelf: 'center',
-                      color: '#166534',
+                      color: '#22c55e',
                       fontSize: 13,
                       fontWeight: 600,
                     }}
@@ -490,7 +490,7 @@ function ProjectDashboard({ project, onBack, onEdit, onDeleted, onRefresh }) {
                 margin: 0,
                 fontSize: 22,
                 fontWeight: 800,
-                color: '#0F172A',
+                color: '#e8edf5',
               }}
             >
               {project.name}
@@ -498,11 +498,11 @@ function ProjectDashboard({ project, onBack, onEdit, onDeleted, onRefresh }) {
             <StatusPill status={project.status} />
           </div>
           {project.description && (
-            <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: 14 }}>
+            <p style={{ margin: '4px 0 0', color: '#7a8fa8', fontSize: 14 }}>
               {project.description}
             </p>
           )}
-          <div style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: '#4a5e78', marginTop: 4 }}>
             Created by {project.createdBy} ·{' '}
             {new Date(project.createdAt).toLocaleDateString('en-IN', {
               day: 'numeric',
@@ -520,7 +520,7 @@ function ProjectDashboard({ project, onBack, onEdit, onDeleted, onRefresh }) {
           </button>
         ) : (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <span style={{ fontSize: 13, color: '#DC2626' }}>Sure?</span>
+            <span style={{ fontSize: 13, color: '#ffb4ae' }}>Sure?</span>
             <button
               style={S.dangerBtn}
               onClick={handleDelete}
@@ -540,7 +540,7 @@ function ProjectDashboard({ project, onBack, onEdit, onDeleted, onRefresh }) {
           margin: '0 0 14px',
           fontSize: 16,
           fontWeight: 700,
-          color: '#1E293B',
+          color: '#e8edf5',
         }}
       >
         Requirements & Employee Matching
@@ -572,12 +572,12 @@ function ProjectList({ projects, onSelect, onCreate }) {
               margin: 0,
               fontSize: 22,
               fontWeight: 800,
-              color: '#0F172A',
+              color: '#e8edf5',
             }}
           >
             Demand Management
           </h2>
-          <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: 14 }}>
+          <p style={{ margin: '4px 0 0', color: '#7a8fa8', fontSize: 14 }}>
             Create projects, define hiring requirements, match employees.
           </p>
         </div>
@@ -611,7 +611,7 @@ function ProjectList({ projects, onSelect, onCreate }) {
                   style={{
                     fontWeight: 700,
                     fontSize: 16,
-                    color: '#1E293B',
+                    color: '#e8edf5',
                     lineHeight: 1.3,
                   }}
                 >
@@ -623,7 +623,7 @@ function ProjectList({ projects, onSelect, onCreate }) {
                 <p
                   style={{
                     margin: '0 0 10px',
-                    color: '#64748B',
+                    color: '#7a8fa8',
                     fontSize: 13,
                     lineHeight: 1.5,
                   }}
@@ -654,7 +654,7 @@ function ProjectList({ projects, onSelect, onCreate }) {
                     <span style={S.statLabel}>People needed</span>
                   </div>
                 </div>
-                <span style={{ fontSize: 12, color: '#94A3B8' }}>
+                <span style={{ fontSize: 12, color: '#4a5e78' }}>
                   {new Date(p.createdAt).toLocaleDateString('en-IN', {
                     day: 'numeric',
                     month: 'short',
@@ -726,7 +726,7 @@ export default function DemandManagement({ currentUser, onBack, onLogout }) {
           alignItems: 'center',
           justifyContent: 'center',
           height: '100vh',
-          background: '#F8FAFC',
+          background: '#050d1a',
         }}
       >
         <div
@@ -734,11 +734,11 @@ export default function DemandManagement({ currentUser, onBack, onLogout }) {
             width: 36,
             height: 36,
             borderRadius: '50%',
-            border: '3px solid #E2E8F0',
-            borderTopColor: '#3B82F6',
+            border: '3px solid rgba(255,255,255,0.06)',
+            borderTopColor: '#00d4ff',
           }}
         />
-        <span style={{ color: '#94A3B8', fontSize: 14, marginTop: 12 }}>
+        <span style={{ color: '#7a8fa8', fontSize: 14, marginTop: 12 }}>
           Loading projects…
         </span>
       </div>
@@ -749,7 +749,7 @@ export default function DemandManagement({ currentUser, onBack, onLogout }) {
     <div
       style={{
         minHeight: '100vh',
-        background: '#F8FAFC',
+        background: '#050d1a',
         fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
       }}
     >
@@ -778,13 +778,13 @@ export default function DemandManagement({ currentUser, onBack, onLogout }) {
           >
             ← Home
           </button>
-          <span style={{ color: '#334155', fontSize: 14 }}>|</span>
+          <span style={{ color: '#4a5e78', fontSize: 14 }}>|</span>
           <span style={{ color: '#E2E8F0', fontSize: 14, fontWeight: 600 }}>
             Demand Management
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: '#64748B', fontSize: 13 }}>
+          <span style={{ color: '#7a8fa8', fontSize: 13 }}>
             {currentUser?.email}
           </span>
           <button
@@ -859,48 +859,48 @@ const S = {
     gap: 16,
   },
   projectCard: {
-    background: '#FFFFFF',
-    border: '1px solid #E2E8F0',
+    background: '#0a1628',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 14,
     padding: '20px 20px 16px',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
     minHeight: 140,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 6px rgba(0,0,0,0.3)',
     textAlign: 'left',
     font: 'inherit',
   },
   stat: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  statNum: { fontSize: 20, fontWeight: 800, color: '#3B82F6', lineHeight: 1 },
-  statLabel: { fontSize: 11, color: '#94A3B8', marginTop: 2 },
+  statNum: { fontSize: 20, fontWeight: 800, color: '#00d4ff', lineHeight: 1 },
+  statLabel: { fontSize: 11, color: '#4a5e78', marginTop: 2 },
   emptyState: {
     textAlign: 'center',
-    color: '#94A3B8',
+    color: '#4a5e78',
     fontSize: 15,
     padding: '48px 24px',
-    background: '#FFFFFF',
+    background: '#0a1628',
     borderRadius: 14,
-    border: '1px dashed #E2E8F0',
+    border: '1px dashed rgba(255,255,255,0.08)',
   },
   formCard: {
-    background: '#FFFFFF',
-    border: '1px solid #E2E8F0',
+    background: '#0a1628',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 14,
     padding: 28,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
   },
   formTitle: {
     margin: '0 0 20px',
     fontSize: 20,
     fontWeight: 800,
-    color: '#0F172A',
+    color: '#e8edf5',
   },
   label: {
     display: 'block',
     fontSize: 12,
     fontWeight: 600,
-    color: '#475569',
+    color: '#7a8fa8',
     marginBottom: 4,
     marginTop: 12,
     textTransform: 'uppercase',
@@ -909,26 +909,26 @@ const S = {
   input: {
     width: '100%',
     padding: '9px 12px',
-    border: '1.5px solid #E2E8F0',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 8,
     fontSize: 14,
-    color: '#1E293B',
-    background: '#F8FAFC',
+    color: '#e8edf5',
+    background: 'rgba(255,255,255,0.04)',
     outline: 'none',
     boxSizing: 'border-box',
   },
   reqBlock: {
-    background: '#F8FAFC',
-    border: '1.5px solid #E2E8F0',
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 10,
     padding: '14px 16px',
     marginBottom: 10,
   },
   reqGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' },
   addReqBtn: {
-    background: '#EFF6FF',
-    color: '#2563EB',
-    border: '1.5px solid #BFDBFE',
+    background: 'rgba(0,212,255,0.08)',
+    color: '#00d4ff',
+    border: '1px solid rgba(0,212,255,0.2)',
     borderRadius: 8,
     padding: '6px 14px',
     fontSize: 13,
@@ -938,35 +938,35 @@ const S = {
   removeBtn: {
     background: 'none',
     border: 'none',
-    color: '#EF4444',
+    color: '#ffb4ae',
     fontSize: 12,
     fontWeight: 600,
     cursor: 'pointer',
     padding: 0,
   },
   errorBanner: {
-    background: '#FEF2F2',
-    border: '1px solid #FECACA',
-    color: '#DC2626',
+    background: 'rgba(255,95,87,0.08)',
+    border: '1px solid rgba(255,95,87,0.35)',
+    color: '#ffb4ae',
     borderRadius: 8,
     padding: '10px 14px',
     fontSize: 13,
     marginBottom: 12,
   },
   primaryBtn: {
-    background: '#2563EB',
-    color: '#FFF',
+    background: '#00d4ff',
+    color: '#001018',
     border: 'none',
     borderRadius: 8,
     padding: '10px 20px',
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: 'pointer',
   },
   ghostBtn: {
     background: 'none',
-    color: '#64748B',
-    border: '1.5px solid #E2E8F0',
+    color: '#7a8fa8',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 8,
     padding: '9px 18px',
     fontSize: 14,
@@ -974,9 +974,9 @@ const S = {
     cursor: 'pointer',
   },
   editBtn: {
-    background: '#F1F5F9',
-    color: '#334155',
-    border: '1.5px solid #E2E8F0',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#e8edf5',
+    border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 8,
     padding: '7px 16px',
     fontSize: 13,
@@ -984,9 +984,9 @@ const S = {
     cursor: 'pointer',
   },
   dangerBtn: {
-    background: '#FEF2F2',
-    color: '#DC2626',
-    border: '1.5px solid #FECACA',
+    background: 'rgba(255,95,87,0.08)',
+    color: '#ffb4ae',
+    border: '1px solid rgba(255,95,87,0.35)',
     borderRadius: 8,
     padding: '7px 16px',
     fontSize: 13,
@@ -996,7 +996,7 @@ const S = {
   backBtn: {
     background: 'none',
     border: 'none',
-    color: '#3B82F6',
+    color: '#00d4ff',
     fontSize: 14,
     fontWeight: 600,
     cursor: 'pointer',
@@ -1004,16 +1004,16 @@ const S = {
     whiteSpace: 'nowrap',
   },
   matchPanel: {
-    background: '#FFFFFF',
-    border: '1.5px solid #E2E8F0',
+    background: '#0a1628',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 12,
     padding: '16px 18px',
     marginBottom: 12,
   },
   matchBtn: {
-    background: '#EFF6FF',
-    color: '#2563EB',
-    border: '1.5px solid #BFDBFE',
+    background: 'rgba(0,212,255,0.08)',
+    color: '#00d4ff',
+    border: '1px solid rgba(0,212,255,0.2)',
     borderRadius: 8,
     padding: '6px 14px',
     fontSize: 13,
@@ -1028,23 +1028,23 @@ const S = {
     marginTop: 4,
   },
   empCard: {
-    border: '2px solid #E2E8F0',
+    border: '1px solid rgba(255,255,255,0.06)',
     borderRadius: 10,
     padding: '12px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'flex-start',
     gap: 10,
-    background: '#FAFAFA',
+    background: 'rgba(255,255,255,0.02)',
     position: 'relative',
   },
-  empCardSelected: { borderColor: '#3B82F6', background: '#EFF6FF' },
+  empCardSelected: { borderColor: '#00d4ff', background: 'rgba(0,212,255,0.08)' },
   avatar: {
     width: 34,
     height: 34,
     borderRadius: '50%',
-    background: '#DBEAFE',
-    color: '#1D4ED8',
+    background: 'rgba(0,212,255,0.12)',
+    color: '#00d4ff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1056,10 +1056,10 @@ const S = {
     position: 'absolute',
     top: 8,
     right: 10,
-    color: '#2563EB',
+    color: '#00d4ff',
     fontWeight: 800,
     fontSize: 14,
   },
-  emptyMatch: { color: '#94A3B8', fontSize: 13, padding: '10px 0 4px' },
-  muted: { color: '#94A3B8', fontSize: 13, marginTop: 8 },
+  emptyMatch: { color: '#4a5e78', fontSize: 13, padding: '10px 0 4px' },
+  muted: { color: '#4a5e78', fontSize: 13, marginTop: 8 },
 };

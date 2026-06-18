@@ -782,8 +782,8 @@ function EmployeeModal({
 }) {
   const lockManagedFields = !canManageAllFields;
   const disableAll = readOnly;
-  const showEmployeeStatus =
-    form.role !== 'PROJECT_ADMINISTRATOR' && form.role !== 'PROJECT_ADMIN';
+  const isEmployee = form.role === 'EMPLOYEE';
+  const showEmployeeStatus = isEmployee;
 
   return (
     <div className="employee-modal-backdrop">
@@ -797,6 +797,12 @@ function EmployeeModal({
         </div>
 
         <form className="employee-form employee-form-grid" onSubmit={onSubmit}>
+          <label className="employee-field">
+            <span>Role</span>
+            <select value={form.role} onChange={(event) => onChange('role', event.target.value)} disabled={disableAll || lockManagedFields}>
+              {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
+            </select>
+          </label>
           <Field label="Employee Code" value={form.employeeCode} onChange={(value) => onChange('employeeCode', value)} disabled={disableAll || lockManagedFields} required />
           <Field label="First Name" value={form.firstName} onChange={(value) => onChange('firstName', value)} disabled={disableAll || lockManagedFields} required />
           <Field label="Last Name" value={form.lastName} onChange={(value) => onChange('lastName', value)} disabled={disableAll || lockManagedFields} required />
@@ -806,27 +812,25 @@ function EmployeeModal({
           <Field label="Designation" value={form.designation} onChange={(value) => onChange('designation', value)} disabled={disableAll || lockManagedFields} />
           <Field label="Joining Date" type="date" value={form.joiningDate} onChange={(value) => onChange('joiningDate', value)} disabled={disableAll || lockManagedFields} />
           <Field label="Location" value={form.location} onChange={(value) => onChange('location', value)} disabled={disableAll} />
-          <Field label="Manager ID" type="number" value={form.managerId} onChange={(value) => onChange('managerId', value)} disabled={disableAll || lockManagedFields} />
           <Field label="Experience Years" type="number" step="0.1" value={form.experienceYears} onChange={(value) => onChange('experienceYears', value)} disabled={disableAll} />
-          <Field label="Bench Start Date" type="date" value={form.benchStartDate} onChange={(value) => onChange('benchStartDate', value)} disabled={disableAll || lockManagedFields} />
 
-          {showEmployeeStatus ? (
-            <label className="employee-field">
-              <span>Status</span>
-              <select value={form.status} onChange={(event) => onChange('status', event.target.value)} disabled={disableAll || lockManagedFields}>
-                {EMPLOYEE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
-              </select>
-            </label>
+          {isEmployee ? (
+            <>
+              <Field label="Manager ID" type="number" value={form.managerId} onChange={(value) => onChange('managerId', value)} disabled={disableAll || lockManagedFields} />
+              <Field label="Bench Start Date" type="date" value={form.benchStartDate} onChange={(value) => onChange('benchStartDate', value)} disabled={disableAll || lockManagedFields} />
+              {showEmployeeStatus ? (
+                <label className="employee-field">
+                  <span>Status</span>
+                  <select value={form.status} onChange={(event) => onChange('status', event.target.value)} disabled={disableAll || lockManagedFields}>
+                    {EMPLOYEE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
+                  </select>
+                </label>
+              ) : null}
+              <Field label="Skills" value={form.skillsText} onChange={(value) => onChange('skillsText', value)} placeholder="Java, React, PostgreSQL" disabled={disableAll} />
+              <Field label="Certifications" value={form.certificationsText} onChange={(value) => onChange('certificationsText', value)} placeholder="AWS, Scrum Master" disabled={disableAll} />
+              <Field label="Project History" value={form.projectHistoryText} onChange={(value) => onChange('projectHistoryText', value)} placeholder="Billing App, CRM Migration" disabled={disableAll || lockManagedFields} />
+            </>
           ) : null}
-          <label className="employee-field">
-            <span>Role</span>
-            <select value={form.role} onChange={(event) => onChange('role', event.target.value)} disabled={disableAll || lockManagedFields}>
-              {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
-            </select>
-          </label>
-          <Field label="Skills" value={form.skillsText} onChange={(value) => onChange('skillsText', value)} placeholder="Java, React, PostgreSQL" disabled={disableAll} />
-          <Field label="Certifications" value={form.certificationsText} onChange={(value) => onChange('certificationsText', value)} placeholder="AWS, Scrum Master" disabled={disableAll} />
-          <Field label="Project History" value={form.projectHistoryText} onChange={(value) => onChange('projectHistoryText', value)} placeholder="Billing App, CRM Migration" disabled={disableAll || lockManagedFields} />
           {canManageAllFields ? (
             <Field label={requirePassword ? 'Temporary Password' : 'Reset Password'} type="password" value={form.password} onChange={(value) => onChange('password', value)} minLength={6} required={requirePassword} placeholder={requirePassword ? '' : 'Leave blank to keep existing'} />
           ) : null}
