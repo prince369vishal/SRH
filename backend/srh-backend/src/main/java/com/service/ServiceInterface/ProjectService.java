@@ -14,6 +14,8 @@ public interface ProjectService {
     void deleteProject(Long id);
     // Returns employees whose skills + experience match a given requirement
     List<EmployeeResponse> getMatchingEmployees(Long projectId, Long requirementId);
-    // Assign specific employees to a requirement
+    // Shortlist matching ON_BENCH employees for a requirement
+    ProjectResponse shortlistEmployees(Long projectId, Long requirementId, List<Long> employeeIds);
+    // Backward-compatible alias for older clients
     ProjectResponse assignEmployees(Long projectId, Long requirementId, List<Long> employeeIds);
 }

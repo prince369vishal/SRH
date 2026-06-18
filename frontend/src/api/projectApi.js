@@ -1,4 +1,6 @@
-const BASE = 'http://localhost:8080/api';
+import { API_BASE_URL } from '../config.js';
+
+const BASE = `${API_BASE_URL}/api`;
 
 function authHeaders() {
   const auth = JSON.parse(localStorage.getItem('srhAuth') || '{}');
@@ -20,6 +22,11 @@ async function handleResponse(res) {
 
 export const getAllProjects = () =>
   fetch(`${BASE}/projects`, { headers: authHeaders() }).then(handleResponse);
+
+export const getProjectById = (id) =>
+  fetch(`${BASE}/projects/${id}`, { headers: authHeaders() }).then(
+    handleResponse,
+  );
 
 export const createProject = (data) =>
   fetch(`${BASE}/projects`, {
@@ -46,9 +53,12 @@ export const getMatchingEmployees = (projectId, requirementId) =>
     headers: authHeaders(),
   }).then(handleResponse);
 
-export const assignEmployees = (projectId, requirementId, employeeIds) =>
-  fetch(`${BASE}/projects/${projectId}/requirements/${requirementId}/assign`, {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify(employeeIds),
-  }).then(handleResponse);
+export const shortlistEmployees = (projectId, requirementId, employeeIds) =>
+  fetch(
+    `${BASE}/projects/${projectId}/requirements/${requirementId}/shortlist`,
+    {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(employeeIds),
+    },
+  ).then(handleResponse);

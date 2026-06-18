@@ -67,8 +67,6 @@ public class EmployeeRequest {
 
     public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
@@ -78,13 +76,6 @@ public class EmployeeRequest {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
-
-    public String getSkills() { return skills; }
-    public void setSkills(String skills) { this.skills = skills; }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
 
     public String getFirstName() { return firstName; }
 

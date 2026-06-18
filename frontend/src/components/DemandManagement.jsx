@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   getAllProjects,
+  getProjectById,
   createProject,
   updateProject,
   deleteProject,
   getMatchingEmployees,
-  assignEmployees,
+  shortlistEmployees,
 } from '../api/projectApi';
 
 const BADGE_COLORS = [
@@ -43,6 +44,29 @@ const SkillBadge = ({ skill }) => {
     </span>
   );
 };
+
+function employeeName(employee) {
+  return (
+    [employee?.firstName, employee?.lastName].filter(Boolean).join(' ') ||
+    employee?.email ||
+    'Employee'
+  );
+}
+
+function employeeSkills(employee) {
+  if (Array.isArray(employee?.skills)) {
+    return employee.skills.map((skill) => skill.skillName).filter(Boolean);
+  }
+
+  if (typeof employee?.skills === 'string') {
+    return employee.skills
+      .split(',')
+      .map((skill) => skill.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
 
 const StatusPill = ({ status }) => {
   const colors = {
@@ -245,7 +269,7 @@ function ProjectForm({ initial, onSave, onCancel }) {
   );
 }
 
-function MatchPanel({ projectId, requirement, onAssigned }) {
+function MatchPanel({ projectId, requirement, onShortlisted }) {
   const [matches, setMatches] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(new Set());
@@ -269,6 +293,10 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
     }
   }, [projectId, requirement.id, requirement.assignedEmployeeIds]);
 
+  useEffect(() => {
+    loadMatches();
+  }, [loadMatches]);
+
   const toggle = (id) =>
     setSelected((prev) => {
       const next = new Set(prev);
@@ -279,10 +307,11 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
   const save = async () => {
     setSaving(true);
     try {
-      await assignEmployees(projectId, requirement.id, [...selected]);
+      await shortlistEmployees(projectId, requirement.id, [...selected]);
       setDone(true);
-      onAssigned();
+      onShortlisted();
     } catch {
+      setDone(false);
     } finally {
       setSaving(false);
     }
@@ -306,6 +335,11 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
             {requirement.minExperienceYears}+ yrs
           </div>
         </div>
+        {matches !== null && !loading && (
+          <button style={S.matchBtn} onClick={loadMatches}>
+            Refresh
+          </button>
+        )}
         {matches === null && !loading && (
           <button style={S.matchBtn} onClick={loadMatches}>
             Find Matches
@@ -338,11 +372,12 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
                 }}
               >
                 {matches.length} matching employee
-                {matches.length !== 1 ? 's' : ''} — select to assign
+                {matches.length !== 1 ? 's' : ''} - select to shortlist
               </div>
               <div style={S.matchGrid}>
                 {matches.map((emp) => {
                   const isSelected = selected.has(emp.id);
+                  const name = employeeName(emp);
                   return (
                     <div
                       key={emp.id}
@@ -353,7 +388,7 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
                       onClick={() => toggle(emp.id)}
                     >
                       <div style={S.avatar}>
-                        {emp.name.charAt(0).toUpperCase()}
+                        {name.charAt(0).toUpperCase()}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div
@@ -363,14 +398,14 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
                             color: '#1E293B',
                           }}
                         >
-                          {emp.name}
+                          {name}
                         </div>
                         <div style={{ fontSize: 11, color: '#64748B' }}>
-                          {emp.experienceYears} yrs experience
+                          {emp.experienceYears || 0} yrs experience -{' '}
+                          {emp.status}
                         </div>
                         <div style={{ marginTop: 4 }}>
-                          {emp.skills
-                            ?.split(',')
+                          {employeeSkills(emp)
                             .slice(0, 3)
                             .map((s) => (
                               <SkillBadge key={s} skill={s} />
@@ -390,7 +425,7 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
                 >
                   {saving
                     ? 'Saving…'
-                    : `Assign ${selected.size} employee${selected.size !== 1 ? 's' : ''}`}
+                    : `Shortlist ${selected.size} employee${selected.size !== 1 ? 's' : ''}`}
                 </button>
                 {done && (
                   <span
@@ -413,7 +448,7 @@ function MatchPanel({ projectId, requirement, onAssigned }) {
   );
 }
 
-function ProjectDetail({ project, onBack, onEdit, onDeleted, onRefresh }) {
+function ProjectDashboard({ project, onBack, onEdit, onDeleted, onRefresh }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -519,7 +554,7 @@ function ProjectDetail({ project, onBack, onEdit, onDeleted, onRefresh }) {
             key={req.id}
             projectId={project.id}
             requirement={req}
-            onAssigned={onRefresh}
+            onShortlisted={onRefresh}
           />
         ))
       )}
@@ -558,7 +593,12 @@ function ProjectList({ projects, onSelect, onCreate }) {
       ) : (
         <div style={S.cardGrid}>
           {projects.map((p) => (
-            <div key={p.id} style={S.projectCard} onClick={() => onSelect(p)}>
+            <button
+              key={p.id}
+              type="button"
+              style={S.projectCard}
+              onClick={() => onSelect(p)}
+            >
               <div
                 style={{
                   display: 'flex',
@@ -621,7 +661,7 @@ function ProjectList({ projects, onSelect, onCreate }) {
                   })}
                 </span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -652,18 +692,24 @@ export default function DemandManagement({ currentUser, onBack, onLogout }) {
   const refreshSelected = async () => {
     const fresh = await getAllProjects();
     setProjects(fresh);
-    if (selected) setSelected(fresh.find((p) => p.id === selected.id) || null);
+    if (selected) {
+      const project = await getProjectById(selected.id);
+      setSelected(project);
+    }
   };
 
   const handleCreate = async (data) => {
-    await createProject(data);
+    const project = await createProject(data);
     await load();
-    setView('list');
+    setSelected(project);
+    setView('dashboard');
   };
   const handleUpdate = async (data) => {
     await updateProject(selected.id, data);
+    const project = await getProjectById(selected.id);
     await load();
-    setView('list');
+    setSelected(project);
+    setView('dashboard');
   };
   const handleDeleted = async () => {
     await load();
@@ -763,9 +809,10 @@ export default function DemandManagement({ currentUser, onBack, onLogout }) {
         {view === 'list' && (
           <ProjectList
             projects={projects}
-            onSelect={(p) => {
-              setSelected(p);
-              setView('detail');
+            onSelect={async (p) => {
+              const project = await getProjectById(p.id);
+              setSelected(project);
+              setView('dashboard');
             }}
             onCreate={() => setView('create')}
           />
@@ -777,11 +824,11 @@ export default function DemandManagement({ currentUser, onBack, onLogout }) {
           <ProjectForm
             initial={selected}
             onSave={handleUpdate}
-            onCancel={() => setView('detail')}
+            onCancel={() => setView('dashboard')}
           />
         )}
-        {view === 'detail' && selected && (
-          <ProjectDetail
+        {view === 'dashboard' && selected && (
+          <ProjectDashboard
             project={selected}
             onBack={() => {
               setSelected(null);
@@ -821,6 +868,8 @@ const S = {
     flexDirection: 'column',
     minHeight: 140,
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+    textAlign: 'left',
+    font: 'inherit',
   },
   stat: { display: 'flex', flexDirection: 'column', alignItems: 'center' },
   statNum: { fontSize: 20, fontWeight: 800, color: '#3B82F6', lineHeight: 1 },
