@@ -94,20 +94,6 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeResponse saveEmployee(EmployeeRequest employeeRequest) {
-        employeeRepository.findByEmail(employeeRequest.getEmail()).ifPresent(existing -> {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Employee email already exists");
-        });
-
-        Employee employee = new Employee();
-        employee.setName(employeeRequest.getName());
-        employee.setEmail(employeeRequest.getEmail());
-        employee.setPassword(passwordEncoder.encode(employeeRequest.getPassword()));
-        employee.setRole(employeeRequest.getRole());
-        employee.setSkills(employeeRequest.getSkills());
-        employee.setExperienceYears(employeeRequest.getExperienceYears());
-
-        return toResponse(employeeRepository.save(employee));
     public EmployeeResponse getEmployeeByEmail(String email) {
         return toResponse(findEmployeeByEmail(email));
     }
@@ -119,17 +105,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         return toResponse(employeeRepository.save(employee));
     }
 
-        if (employeeRequest.getEmail() != null && !employeeRequest.getEmail().equals(employee.getEmail())) {
-            employeeRepository.findByEmail(employeeRequest.getEmail()).ifPresent(existing -> {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Employee email already exists");
-            });
-            employee.setEmail(employeeRequest.getEmail());
-        }
-
-        if (employeeRequest.getName() != null) employee.setName(employeeRequest.getName());
-        if (employeeRequest.getRole() != null) employee.setRole(employeeRequest.getRole());
-        if (employeeRequest.getSkills() != null) employee.setSkills(employeeRequest.getSkills());
-        if (employeeRequest.getExperienceYears() != null) employee.setExperienceYears(employeeRequest.getExperienceYears());
     @Override
     public EmployeeResponse updateOwnProfile(String email, EmployeeUpdateRequest request) {
         Employee employee = findEmployeeByEmail(email);
@@ -237,8 +212,6 @@ public class EmployeeServiceImpl implements EmployeeService {
                 employee.getEmployeeCode(),
                 employee.getEmail(),
                 employee.getRole(),
-                employee.getSkills(),
-                employee.getExperienceYears()
                 employee.getFirstName(),
                 employee.getLastName(),
                 employee.getPhoneNumber(),

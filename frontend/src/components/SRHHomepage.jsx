@@ -149,12 +149,15 @@ function toEmployeePayload(form, includePassword = true) {
     managerId: nullable(form.managerId),
     experienceYears: nullable(form.experienceYears),
     benchStartDate: nullable(form.benchStartDate),
-    status: form.status,
     active: form.active,
     skills: textToSkills(form.skillsText),
     certifications: textToCertifications(form.certificationsText),
     projectHistory: textToProjectHistory(form.projectHistoryText),
   };
+
+  if (form.role !== 'PROJECT_ADMINISTRATOR' && form.role !== 'PROJECT_ADMIN') {
+    payload.status = form.status;
+  }
 
   if (includePassword || form.password.trim()) {
     payload.password = form.password.trim();
@@ -186,7 +189,7 @@ function toProjectPayload(form) {
   };
 }
 
-export default function SRHHomepage({ currentUser, onLogout }) {
+export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
   const role = currentUser?.role === 'PROJECT_ADMIN' ? 'PROJECT_ADMINISTRATOR' : currentUser?.role;
   const isAdmin = role === 'ADMIN';
   const isOperator = role === 'OPERATOR';
@@ -221,6 +224,12 @@ export default function SRHHomepage({ currentUser, onLogout }) {
   const [isLoadingMatched, setIsLoadingMatched] = useState(false);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
   const [isShortlisting, setIsShortlisting] = useState(false);
+
+  useEffect(() => {
+    if (canManageDemand && onGoToDemand) {
+      onGoToDemand();
+    }
+  }, [canManageDemand, onGoToDemand]);
 
   const navItems = useMemo(() => [
     'Profile',
@@ -849,7 +858,7 @@ export default function SRHHomepage({ currentUser, onLogout }) {
         <div className="nav-actions">
           <span className="nav-user">{currentUser?.email} · {role}</span>
           <button className="btn-ghost" onClick={onLogout}>Sign out</button>
-          {canManageDemand ? <button className="btn-primary" onClick={openCreateProject}>+ Create Project</button> : null}
+          {canManageDemand ? <button className="btn-primary" onClick={onGoToDemand || openCreateProject}>+ Create Project</button> : null}
           {canImportEmployees ? <button className="btn-ghost" onClick={() => setShowImportForm(true)}>Bulk Import</button> : null}
           {canManageEmployees ? (
             <button className="btn-primary" onClick={() => setShowEmployeeForm(true)}>+ Add Employee</button>
@@ -1041,6 +1050,8 @@ function EmployeeModal({
 }) {
   const lockManagedFields = !canManageAllFields;
   const disableAll = readOnly;
+  const showEmployeeStatus =
+    form.role !== 'PROJECT_ADMINISTRATOR' && form.role !== 'PROJECT_ADMIN';
 
   return (
     <div className="employee-modal-backdrop">
@@ -1067,12 +1078,14 @@ function EmployeeModal({
           <Field label="Experience Years" type="number" step="0.1" value={form.experienceYears} onChange={(value) => onChange('experienceYears', value)} disabled={disableAll} />
           <Field label="Bench Start Date" type="date" value={form.benchStartDate} onChange={(value) => onChange('benchStartDate', value)} disabled={disableAll || lockManagedFields} />
 
-          <label className="employee-field">
-            <span>Status</span>
-            <select value={form.status} onChange={(event) => onChange('status', event.target.value)} disabled={disableAll || lockManagedFields}>
-              {EMPLOYEE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
-            </select>
-          </label>
+          {showEmployeeStatus ? (
+            <label className="employee-field">
+              <span>Status</span>
+              <select value={form.status} onChange={(event) => onChange('status', event.target.value)} disabled={disableAll || lockManagedFields}>
+                {EMPLOYEE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
+              </select>
+            </label>
+          ) : null}
           <label className="employee-field">
             <span>Role</span>
             <select value={form.role} onChange={(event) => onChange('role', event.target.value)} disabled={disableAll || lockManagedFields}>

@@ -9,6 +9,7 @@ import com.enums.Role;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Employee details returned by the API. Passwords are never returned.")
 public class EmployeeResponse {
@@ -19,8 +20,6 @@ public class EmployeeResponse {
     @Schema(example = "aarav.sharma@example.com")
     private String email;
     private Role role;
-    private String skills;
-    private Integer experienceYears;
 
     private String firstName;
     private String lastName;
@@ -67,20 +66,9 @@ public class EmployeeResponse {
         this.projectHistory = projectHistory;
     }
 
-    public EmployeeResponse(Long id, String name, String email, Role role,
-                            String skills, Integer experienceYears) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.role = role;
-        this.skills = skills;
-        this.experienceYears = experienceYears;
-    }
 
     public String getEmployeeCode() { return employeeCode; }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
 
     public Role getRole() {
         return role;

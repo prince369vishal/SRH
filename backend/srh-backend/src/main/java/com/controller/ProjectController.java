@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +45,7 @@ public class ProjectController {
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('PROJECT_ADMINISTRATOR', 'PROJECT_ADMIN')")
     public ProjectResponse createProject(@Valid @RequestBody ProjectRequest request,
                                          Authentication authentication) {
         String email = (String) authentication.getPrincipal();
@@ -72,6 +74,7 @@ public class ProjectController {
 
     @Operation(summary = "Update project", description = "Replaces project details and requirements. Requires ADMIN role.")
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PROJECT_ADMINISTRATOR', 'PROJECT_ADMIN')")
     public ProjectResponse updateProject(@PathVariable Long id,
                                          @Valid @RequestBody ProjectRequest request) {
         return projectService.updateProject(id, request);
@@ -80,6 +83,7 @@ public class ProjectController {
     @Operation(summary = "Delete project", description = "Requires ADMIN role.")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('PROJECT_ADMINISTRATOR', 'PROJECT_ADMIN')")
     public void deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
     }
@@ -94,9 +98,20 @@ public class ProjectController {
         return projectService.getMatchingEmployees(projectId, requirementId);
     }
 
+    @Operation(summary = "Shortlist employees for a requirement",
+            description = "Saves selected employee IDs against a requirement and moves ON_BENCH employees to SHORTLISTED. Requires PROJECT_ADMINISTRATOR role.")
+    @PostMapping("/{projectId}/requirements/{requirementId}/shortlist")
+    @PreAuthorize("hasAnyRole('PROJECT_ADMINISTRATOR', 'PROJECT_ADMIN')")
+    public ProjectResponse shortlistEmployees(@PathVariable Long projectId,
+                                              @PathVariable Long requirementId,
+                                              @RequestBody List<Long> employeeIds) {
+        return projectService.shortlistEmployees(projectId, requirementId, employeeIds);
+    }
+
     @Operation(summary = "Assign employees to a requirement",
-            description = "Saves selected employee IDs against a requirement. Requires ADMIN role.")
+            description = "Backward-compatible alias for shortlisting employees.")
     @PostMapping("/{projectId}/requirements/{requirementId}/assign")
+    @PreAuthorize("hasAnyRole('PROJECT_ADMINISTRATOR', 'PROJECT_ADMIN')")
     public ProjectResponse assignEmployees(@PathVariable Long projectId,
                                            @PathVariable Long requirementId,
                                            @RequestBody List<Long> employeeIds) {
