@@ -67,6 +67,8 @@ public class EmployeeResponse {
     }
 
 
+    public Long getId() { return id; }
+
     public String getEmployeeCode() { return employeeCode; }
 
 
