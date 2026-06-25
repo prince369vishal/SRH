@@ -6,6 +6,55 @@ import { API_BASE_URL } from '../config.js';
 const ROLE_OPTIONS = ['EMPLOYEE', 'OPERATOR', 'PROJECT_ADMINISTRATOR', 'ADMIN'];
 const EMPLOYEE_STATUS_OPTIONS = ['ON_BENCH', 'SHORTLISTED', 'ALLOCATED'];
 
+const ROLE_META = {
+  EMPLOYEE: {
+    label: 'Employee',
+    tagline: 'Individual contributor',
+    description: 'Full profile with skills, allocation status and bench tracking.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
+      </svg>
+    ),
+  },
+  OPERATOR: {
+    label: 'Operator',
+    tagline: 'Workforce operations',
+    description: 'Runs bulk imports and views the people roster.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 16V4" />
+        <path d="m7 9 5-5 5 5" />
+        <path d="M4 20h16" />
+      </svg>
+    ),
+  },
+  PROJECT_ADMINISTRATOR: {
+    label: 'Project Administrator',
+    tagline: 'Demand & staffing',
+    description: 'Owns project demand and resource requirements.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="4" y="5" width="16" height="15" rx="2" />
+        <path d="M9 5V3.5h6V5" />
+        <path d="M8 11h8M8 15h5" />
+      </svg>
+    ),
+  },
+  ADMIN: {
+    label: 'Admin',
+    tagline: 'Full control',
+    description: 'Complete administrative access across the platform.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 3 5 6v5c0 4.2 2.9 7.7 7 9 4.1-1.3 7-4.8 7-9V6l-7-3Z" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    ),
+  },
+};
+
 const DEFAULT_EMPLOYEE_FORM = {
   employeeCode: '',
   firstName: '',
@@ -979,6 +1028,7 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
           submitLabel="Save Employee"
           canManageAllFields
           requirePassword
+          roleSelection
         />
       ) : null}
 
@@ -1047,45 +1097,109 @@ function EmployeeModal({
   canManageAllFields,
   readOnly = false,
   requirePassword = false,
+  roleSelection = false,
 }) {
   const lockManagedFields = !canManageAllFields;
   const disableAll = readOnly;
   const isEmployee = form.role === 'EMPLOYEE';
   const showEmployeeStatus = isEmployee;
+  const [step, setStep] = useState(roleSelection ? 'role' : 'fields');
+  const activeMeta = ROLE_META[form.role] || ROLE_META.EMPLOYEE;
+
+  const selectRole = (role) => {
+    onChange('role', role);
+    setStep('fields');
+  };
+
+  if (step === 'role') {
+    return (
+      <div className="employee-modal-backdrop">
+        <div className="employee-modal employee-modal-wide" role="dialog" aria-modal="true" aria-labelledby="employee-form-title">
+          <div className="employee-modal-header">
+            <div>
+              <div className="employee-modal-kicker">Step 1 of 2 · Account Type</div>
+              <h2 id="employee-form-title">Select a role</h2>
+            </div>
+            <button className="employee-close" type="button" onClick={onClose} aria-label="Close employee form">X</button>
+          </div>
+
+          <p className="role-picker-sub">Pick the kind of account you want to create. Role-specific details appear in the next step.</p>
+          <div className="role-card-grid">
+            {ROLE_OPTIONS.map((role) => {
+              const meta = ROLE_META[role];
+              const selected = form.role === role;
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  className={`role-card${selected ? ' selected' : ''}`}
+                  onClick={() => selectRole(role)}
+                >
+                  <span className="role-card-icon">{meta.icon}</span>
+                  <span className="role-card-body">
+                    <span className="role-card-name">{meta.label}</span>
+                    <span className="role-card-tag">{meta.tagline}</span>
+                    <span className="role-card-desc">{meta.description}</span>
+                  </span>
+                  <span className="role-card-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="employee-modal-backdrop">
       <div className="employee-modal employee-modal-wide" role="dialog" aria-modal="true" aria-labelledby="employee-form-title">
         <div className="employee-modal-header">
           <div>
-            <div className="employee-modal-kicker">{kicker}</div>
+            <div className="employee-modal-kicker">{roleSelection ? 'Step 2 of 2 · Details' : kicker}</div>
             <h2 id="employee-form-title">{title}</h2>
           </div>
           <button className="employee-close" type="button" onClick={onClose} aria-label="Close employee form">X</button>
         </div>
 
         <form className="employee-form employee-form-grid" onSubmit={onSubmit}>
-          <label className="employee-field">
-            <span>Role</span>
-            <select value={form.role} onChange={(event) => onChange('role', event.target.value)} disabled={disableAll || lockManagedFields}>
-              {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
-            </select>
-          </label>
+          {roleSelection ? (
+            <div className="employee-field-wide role-summary">
+              <span className="role-summary-info">
+                <span className="role-summary-icon">{activeMeta.icon}</span>
+                <span className="role-summary-text">
+                  <span className="role-summary-label">{activeMeta.label}</span>
+                  <span className="role-summary-tag">{activeMeta.tagline}</span>
+                </span>
+              </span>
+              <button type="button" className="role-summary-change" onClick={() => setStep('role')}>Change role</button>
+            </div>
+          ) : (
+            <label className="employee-field">
+              <span>Role</span>
+              <select value={form.role} onChange={(event) => onChange('role', event.target.value)} disabled={disableAll || lockManagedFields}>
+                {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
+              </select>
+            </label>
+          )}
           <Field label="Employee Code" value={form.employeeCode} onChange={(value) => onChange('employeeCode', value)} disabled={disableAll || lockManagedFields} required />
           <Field label="First Name" value={form.firstName} onChange={(value) => onChange('firstName', value)} disabled={disableAll || lockManagedFields} required />
           <Field label="Last Name" value={form.lastName} onChange={(value) => onChange('lastName', value)} disabled={disableAll || lockManagedFields} required />
           <Field label="Email" type="email" value={form.email} onChange={(value) => onChange('email', value)} disabled={disableAll || lockManagedFields} required />
           <Field label="Phone Number" value={form.phoneNumber} onChange={(value) => onChange('phoneNumber', value)} disabled={disableAll} />
-          <Field label="Department" value={form.department} onChange={(value) => onChange('department', value)} disabled={disableAll || lockManagedFields} />
-          <Field label="Designation" value={form.designation} onChange={(value) => onChange('designation', value)} disabled={disableAll || lockManagedFields} />
-          <Field label="Joining Date" type="date" value={form.joiningDate} onChange={(value) => onChange('joiningDate', value)} disabled={disableAll || lockManagedFields} />
           <Field label="Location" value={form.location} onChange={(value) => onChange('location', value)} disabled={disableAll} />
-          <Field label="Experience Years" type="number" step="0.1" value={form.experienceYears} onChange={(value) => onChange('experienceYears', value)} disabled={disableAll} />
 
           {isEmployee ? (
             <>
+              <Field label="Department" value={form.department} onChange={(value) => onChange('department', value)} disabled={disableAll || lockManagedFields} />
+              <Field label="Designation" value={form.designation} onChange={(value) => onChange('designation', value)} disabled={disableAll || lockManagedFields} />
+              <Field label="Joining Date" type="date" value={form.joiningDate} onChange={(value) => onChange('joiningDate', value)} disabled={disableAll || lockManagedFields} />
+              <Field label="Experience Years" type="number" step="0.1" value={form.experienceYears} onChange={(value) => onChange('experienceYears', value)} disabled={disableAll} />
               <Field label="Manager ID" type="number" value={form.managerId} onChange={(value) => onChange('managerId', value)} disabled={disableAll || lockManagedFields} />
-              <Field label="Bench Start Date" type="date" value={form.benchStartDate} onChange={(value) => onChange('benchStartDate', value)} disabled={disableAll || lockManagedFields} />
               {showEmployeeStatus ? (
                 <label className="employee-field">
                   <span>Status</span>
@@ -1095,8 +1209,6 @@ function EmployeeModal({
                 </label>
               ) : null}
               <Field label="Skills" value={form.skillsText} onChange={(value) => onChange('skillsText', value)} placeholder="Java, React, PostgreSQL" disabled={disableAll} />
-              <Field label="Certifications" value={form.certificationsText} onChange={(value) => onChange('certificationsText', value)} placeholder="AWS, Scrum Master" disabled={disableAll} />
-              <Field label="Project History" value={form.projectHistoryText} onChange={(value) => onChange('projectHistoryText', value)} placeholder="Billing App, CRM Migration" disabled={disableAll || lockManagedFields} />
             </>
           ) : null}
           {canManageAllFields ? (
