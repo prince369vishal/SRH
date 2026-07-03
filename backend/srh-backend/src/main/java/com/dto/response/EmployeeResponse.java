@@ -71,6 +71,7 @@ public class EmployeeResponse {
 
     public String getEmployeeCode() { return employeeCode; }
 
+    public String getEmail() { return email; }
 
     public Role getRole() {
         return role;

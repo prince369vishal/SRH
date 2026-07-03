@@ -68,8 +68,9 @@ abstract class ControllerTestSupport {
                 "Bengaluru",
                 LocalDate.of(2026, 1, 15),
                 EmployeeStatus.ON_BENCH,
-                null,
-                null,
+                null,           // LocalDate
+                null,           // Long
+                null,           // BigDecimal  ← this was missing
                 false,
                 true,
                 List.of(),
@@ -78,3 +79,4 @@ abstract class ControllerTestSupport {
         );
     }
 }
+

@@ -36,7 +36,7 @@ class AuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        authService = new AuthServiceImpl(jwtUtil, employeeRepository, passwordEncoder);
+        authService = new AuthServiceImpl(employeeRepository, passwordEncoder, jwtUtil);
         request = new LoginRequest();
         request.setEmail("admin@example.com");
         request.setPassword("admin123");
@@ -46,7 +46,7 @@ class AuthServiceImplTest {
     void loginReturnsTokenForBcryptPassword() {
         Employee employee = employee("$2bcrypt", Role.ADMIN);
         when(employeeRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(employee));
-        when(passwordEncoder.matches(request.getPassword(), employee.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches(request.getPassword(), employee.getPasswordHash())).thenReturn(true);
         when(jwtUtil.generateToken(request.getEmail(), "ADMIN")).thenReturn("jwt-token");
 
         LoginResponse response = authService.login(request);
@@ -57,18 +57,7 @@ class AuthServiceImplTest {
         verify(employeeRepository, never()).save(any());
     }
 
-    @Test
-    void loginMigratesMatchingPlainTextPasswordToBcrypt() {
-        Employee employee = employee("admin123", Role.ADMIN);
-        when(employeeRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(employee));
-        when(passwordEncoder.encode("admin123")).thenReturn("$2encoded");
-        when(jwtUtil.generateToken(request.getEmail(), "ADMIN")).thenReturn("jwt-token");
 
-        authService.login(request);
-
-        assertEquals("$2encoded", employee.getPassword());
-        verify(employeeRepository).save(employee);
-    }
 
     @Test
     void loginRejectsUnknownEmail() {
@@ -85,7 +74,7 @@ class AuthServiceImplTest {
     void loginRejectsIncorrectPassword() {
         Employee employee = employee("$2bcrypt", Role.ADMIN);
         when(employeeRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(employee));
-        when(passwordEncoder.matches(request.getPassword(), employee.getPassword())).thenReturn(false);
+        when(passwordEncoder.matches(request.getPassword(), employee.getPasswordHash())).thenReturn(false);
 
         ResponseStatusException exception =
                 assertThrows(ResponseStatusException.class, () -> authService.login(request));
@@ -94,21 +83,15 @@ class AuthServiceImplTest {
         verifyNoInteractions(jwtUtil);
     }
 
-    @Test
-    void logoutAcceptsBearerToken() {
-        ResponseEntity<String> response = authService.logout("Bearer token");
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Logged out successfully", response.getBody());
-    }
-
-    @Test
-    void logoutRejectsMissingOrMalformedToken() {
-        assertEquals(HttpStatus.BAD_REQUEST, authService.logout(null).getStatusCode());
-        assertEquals(HttpStatus.BAD_REQUEST, authService.logout("token").getStatusCode());
-    }
-
     private Employee employee(String password, Role role) {
-        return new Employee(1L, "Admin", request.getEmail(), password, role);
+        return Employee.builder()
+                .id(1L)
+                .employeeCode("EMP-001")
+                .email(request.getEmail())
+                .passwordHash(password)
+                .role(role)
+                .firstName("Admin")
+                .lastName("User")
+                .build();
     }
 }

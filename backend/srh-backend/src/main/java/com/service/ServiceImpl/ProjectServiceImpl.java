@@ -85,6 +85,55 @@ public class ProjectServiceImpl implements ProjectService {
         projectRepository.delete(project);
     }
 
+    private static class RequiredSkill {
+        final String name;
+        final String level;
+
+        RequiredSkill(String name, String level) {
+            this.name = name.trim().toLowerCase();
+            this.level = level.trim().toLowerCase();
+        }
+    }
+
+    private static class MatchResult {
+        final Employee employee;
+        final double score;
+
+        MatchResult(Employee employee, double score) {
+            this.employee = employee;
+            this.score = score;
+        }
+    }
+
+    private static double getSkillMatchScore(String empLevel, String reqLevel) {
+        String el = empLevel == null ? "entry level" : empLevel.trim().toLowerCase();
+        String rl = reqLevel == null ? "entry level" : reqLevel.trim().toLowerCase();
+
+        if (el.equals("entry")) el = "entry level";
+        if (rl.equals("entry")) rl = "entry level";
+
+        if (rl.equals("advanced")) {
+            if (el.equals("advanced")) {
+                return 3.0; // Advanced matches Advanced
+            }
+            return 0.0; // Intermediate and Entry not eligible
+        } else if (rl.equals("intermediate")) {
+            if (el.equals("advanced")) {
+                return 2.0; // Advanced matches Intermediate (eligible)
+            } else if (el.equals("intermediate")) {
+                return 2.0; // Intermediate matches Intermediate (eligible)
+            }
+            return 0.0; // Entry not eligible
+        } else { // rl is "entry level"
+            if (el.equals("intermediate")) {
+                return 1.5; // Intermediate matches Entry Level (eligible)
+            } else if (el.equals("entry level")) {
+                return 1.0; // Entry Level matches Entry Level (eligible)
+            }
+            return 0.0; // Advanced not eligible for Entry Level roles
+        }
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<EmployeeResponse> getMatchingEmployees(Long projectId, Long requirementId) {
@@ -96,31 +145,54 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Requirement not found"));
 
-        Set<String> requiredSkills = Arrays.stream(requirement.getRequiredSkills().split(","))
-                .map(String::trim)
-                .map(String::toLowerCase)
-                .collect(Collectors.toSet());
+        if (requirement.getRequiredSkills() == null || requirement.getRequiredSkills().isBlank()) {
+            return List.of();
+        }
+
+        List<RequiredSkill> reqSkills = Arrays.stream(requirement.getRequiredSkills().split(","))
+                .filter(s -> s != null && !s.isBlank())
+                .map(s -> {
+                    if (s.contains(":")) {
+                        int idx = s.indexOf(":");
+                        return new RequiredSkill(s.substring(0, idx), s.substring(idx + 1));
+                    } else {
+                        return new RequiredSkill(s, "Entry Level");
+                    }
+                })
+                .toList();
 
         int minExp = requirement.getMinExperienceYears();
         Set<Long> shortlistedEmployeeIds = parseEmployeeIds(requirement.getAssignedEmployeeIds());
 
-        return employeeRepository.findAll().stream()
+        List<MatchResult> matchedResults = employeeRepository.findAll().stream()
                 .filter(emp -> emp.getSkills() != null && emp.getExperienceYears() != null)
                 .filter(emp -> emp.getStatus() == EmployeeStatus.ON_BENCH
                         || shortlistedEmployeeIds.contains(emp.getId()))
                 .filter(emp -> emp.getExperienceYears()
                         .compareTo(BigDecimal.valueOf(minExp)) >= 0)
-                .filter(emp -> {
-                    Set<String> empSkills = emp.getSkills().stream()
-                            .map(skill -> skill.getSkillName() == null ? "" : skill.getSkillName().trim().toLowerCase())
-                            .filter(skill -> !skill.isBlank())
-                            .collect(Collectors.toSet());
+                .map(emp -> {
+                    double totalScore = 0.0;
+                    for (RequiredSkill req : reqSkills) {
+                        com.entity.SkillEntry empSkill = emp.getSkills().stream()
+                                .filter(s -> s.getSkillName() != null && s.getSkillName().trim().equalsIgnoreCase(req.name))
+                                .findFirst()
+                                .orElse(null);
 
-                    return empSkills.containsAll(requiredSkills);
+                        if (empSkill != null) {
+                            totalScore += getSkillMatchScore(empSkill.getProficiency(), req.level);
+                        }
+                    }
+                    return new MatchResult(emp, totalScore);
                 })
-                .map(this::toEmployeeResponse)
+                .filter(res -> res.score > 0.0) // Must match at least one required skill
+                .sorted((a, b) -> Double.compare(b.score, a.score)) // Sort descending by score
+                .toList();
+
+        return matchedResults.stream()
+                .map(res -> toEmployeeResponse(res.employee))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional
