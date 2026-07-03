@@ -5,6 +5,7 @@ import com.dto.response.DemandProjectResponse;
 import com.entity.DemandProject;
 import com.enums.ProjectStatus;
 import com.repository.DemandProjectRepository;
+import com.repository.EmployeeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,12 +29,13 @@ class DemandProjectServiceImplTest {
 
     @Mock
     private DemandProjectRepository demandProjectRepository;
+    private EmployeeRepository employeeRepository;
 
     private DemandProjectServiceImpl demandProjectService;
 
     @BeforeEach
     void setUp() {
-        demandProjectService = new DemandProjectServiceImpl(demandProjectRepository);
+        demandProjectService = new DemandProjectServiceImpl(demandProjectRepository, employeeRepository);
     }
 
     // ─── createProject ────────────────────────────────────────────────────────
