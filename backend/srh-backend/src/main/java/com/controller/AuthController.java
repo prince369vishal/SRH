@@ -30,6 +30,12 @@ public class AuthController {
         return authService.login(loginRequest);
     }
 
+    @Operation(summary = "dummy", description = "Authenticates an active employee and returns a JWT access token.")
+    @PostMapping("/dummy")
+    public LoginResponse dummy(@Valid @RequestBody LoginRequest loginRequest){
+        return authService.login(loginRequest);
+    }
+
     @Operation(summary = "Logout", description = "Client-side logout endpoint. Discard the JWT token after this call.")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
