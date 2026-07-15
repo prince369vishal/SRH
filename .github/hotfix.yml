@@ -1,0 +1,19 @@
+name: Hotfix rollback
+
+# Optional second workflow — only needed if you want change_failure_rate / mttr_p50_hours to
+# reflect real remediation events instead of the current 100%/0h demo-repo placeholder values.
+# Trigger it manually (Actions tab -> Hotfix rollback -> Run workflow) within 48h of a real
+# "Deploy production" run to simulate a remediated failed deploy.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  hotfix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Hotfix
+        run: |
+          echo "Rolling back $(git rev-parse --short HEAD)..."
+          echo "Rollback complete."

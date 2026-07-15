@@ -19,6 +19,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleResponseStatusException(
             ResponseStatusException exception,
             HttpServletRequest request
+
     ) {
         HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
         return ResponseEntity.status(status).body(new ErrorResponse(
