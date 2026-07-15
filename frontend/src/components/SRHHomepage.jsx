@@ -150,7 +150,7 @@ export default function SRHHomepage() {
 
   return (
     <>
-      <div className="srh-root">
+      <div className="com-root">
         {/* NAV */}
         <nav>
           <div className="nav-logo">
@@ -212,7 +212,7 @@ export default function SRHHomepage() {
                   style={{ background: '#28c840' }}
                 />
                 <span className="preview-bar-title">
-                  srh.enterprise.io/people
+                  com.enterprise.io/people
                 </span>
               </div>
               <div className="preview-body">

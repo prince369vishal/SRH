@@ -1,7 +1,8 @@
 package com.controller;
 
 import com.entity.Employee;
-import com.service.EmployeeService;
+import com.service.ServiceInterface.EmployeeService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,8 +16,16 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
-    @PostMapping
-    public Employee createEmployee(@RequestBody Employee employee) {
-        return employeeService.saveEmployee(employee);
+    @GetMapping("/{id}")
+    public ResponseEntity<Employee> viewEmployeeProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(employeeService.getEmployeeById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Employee> editEmployeeProfile(
+            @PathVariable Long id,
+            @RequestBody Employee employee
+    ) {
+        return ResponseEntity.ok(employeeService.updateEmployeeProfile(id, employee));
     }
 }
