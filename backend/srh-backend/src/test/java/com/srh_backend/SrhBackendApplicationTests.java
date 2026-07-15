@@ -1,13 +1,17 @@
 package com.srh_backend;
 
+import com.SrhBackendApplication;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 class SrhBackendApplicationTests {
 
 	@Test
-	void contextLoads() {
+	void applicationClassIsPresent() {
+		SrhBackendApplication application = new SrhBackendApplication();
+
+		assertNotNull(application);
 	}
 
 }

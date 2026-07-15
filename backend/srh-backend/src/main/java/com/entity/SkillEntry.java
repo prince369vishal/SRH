@@ -23,7 +23,7 @@ public class SkillEntry {
     private String skillName;
 
     @Column(length = 50)
-    private Integer proficiency;
+    private String proficiency;
 
     private BigDecimal yearsOfExperience;
 

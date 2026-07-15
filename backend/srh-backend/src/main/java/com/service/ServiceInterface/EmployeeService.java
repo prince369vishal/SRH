@@ -1,23 +1,30 @@
 package com.service.ServiceInterface;
 
+import com.dto.request.EmployeeRequest;
+import com.dto.request.EmployeeUpdateRequest;
+import com.dto.response.BulkImportResponse;
+import com.dto.response.EmployeeResponse;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.entity.Employee;
+import java.util.List;
 
 import java.util.List;
 
 public interface EmployeeService {
 
-	Employee createEmployee(Employee employee);
+    List<EmployeeResponse> getAllEmployees();
 
-	List<Employee> getAllEmployees();
+    EmployeeResponse getEmployeeById(Long id);
 
-	Employee getEmployeeById(Long id);
+    EmployeeResponse getEmployeeByEmail(String email);
 
-	Employee updateEmployee(Long id, Employee employee);
+    EmployeeResponse saveEmployee(EmployeeRequest employeeRequest);
 
-	void deleteEmployee(Long id);
+    EmployeeResponse updateEmployee(Long id, EmployeeUpdateRequest employeeRequest);
 
-	Employee getEmployeeByEmail(String email);
+    EmployeeResponse updateOwnProfile(String email, EmployeeUpdateRequest employeeRequest);
 
-	Employee updateEmployeeProfile(Long id, Employee employee);
+    BulkImportResponse bulkImportEmployees(MultipartFile file);
+
+    void deleteEmployee(Long id);
 }

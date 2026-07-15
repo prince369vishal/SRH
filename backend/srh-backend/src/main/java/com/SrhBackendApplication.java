@@ -1,11 +1,17 @@
 package com;
 
+import java.util.TimeZone;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
+@EnableJpaAuditing
 public class SrhBackendApplication {
 
-	public static void main(String[] args) { SpringApplication.run(SrhBackendApplication.class, args);}
+	public static void main(String[] args) {
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Kolkata"));
+		SpringApplication.run(SrhBackendApplication.class, args);}
 
 }
+

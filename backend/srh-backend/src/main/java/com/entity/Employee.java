@@ -26,6 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,7 +84,9 @@ public class Employee {
 
     private LocalDate benchStartDate;
 
-    private Long performanceManagerId;
+    private Long managerId;
+
+    private BigDecimal experienceYears;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(

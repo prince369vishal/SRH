@@ -3,7 +3,7 @@ package com.enums;
 public enum RequirementStatus {
 
 	OPEN,
-	INTERVIEW_SCEHEDULE,
+	INTERVIEW_SCHEDULE,
 	IN_PROGRESS,
 	FULFILLED,
 	CLOSED
