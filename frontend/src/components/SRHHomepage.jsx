@@ -10,9 +10,18 @@ const ROLE_META = {
   EMPLOYEE: {
     label: 'Employee',
     tagline: 'Individual contributor',
-    description: 'Full profile with skills, allocation status and bench tracking.',
+    description:
+      'Full profile with skills, allocation status and bench tracking.',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <circle cx="12" cy="8" r="3.5" />
         <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
       </svg>
@@ -23,7 +32,15 @@ const ROLE_META = {
     tagline: 'Workforce operations',
     description: 'Runs bulk imports and views the people roster.',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <path d="M12 16V4" />
         <path d="m7 9 5-5 5 5" />
         <path d="M4 20h16" />
@@ -35,7 +52,15 @@ const ROLE_META = {
     tagline: 'Demand & staffing',
     description: 'Owns project demand and resource requirements.',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <rect x="4" y="5" width="16" height="15" rx="2" />
         <path d="M9 5V3.5h6V5" />
         <path d="M8 11h8M8 15h5" />
@@ -47,7 +72,15 @@ const ROLE_META = {
     tagline: 'Full control',
     description: 'Complete administrative access across the platform.',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <path d="M12 3 5 6v5c0 4.2 2.9 7.7 7 9 4.1-1.3 7-4.8 7-9V6l-7-3Z" />
         <path d="m9 12 2 2 4-4" />
       </svg>
@@ -101,11 +134,16 @@ function bearerHeaders(token) {
 }
 
 function fullName(employee) {
-  return [employee?.firstName, employee?.lastName].filter(Boolean).join(' ') || '-';
+  return (
+    [employee?.firstName, employee?.lastName].filter(Boolean).join(' ') || '-'
+  );
 }
 
 function listToText(items, key) {
-  return (items || []).map((item) => item?.[key]).filter(Boolean).join(', ');
+  return (items || [])
+    .map((item) => item?.[key])
+    .filter(Boolean)
+    .join(', ');
 }
 
 function projectSkillsToText(skills) {
@@ -113,11 +151,15 @@ function projectSkillsToText(skills) {
 }
 
 function matchedSkillsText(employee, requiredSkills) {
-  const required = new Set((requiredSkills || []).map((skill) => skill.toLowerCase()));
-  return (employee?.skills || [])
-    .map((skill) => skill.skillName)
-    .filter((skillName) => required.has(skillName.toLowerCase()))
-    .join(', ') || '-';
+  const required = new Set(
+    (requiredSkills || []).map((skill) => skill.toLowerCase()),
+  );
+  return (
+    (employee?.skills || [])
+      .map((skill) => skill.skillName)
+      .filter((skillName) => required.has(skillName.toLowerCase()))
+      .join(', ') || '-'
+  );
 }
 
 function splitText(value) {
@@ -151,7 +193,10 @@ function employeeToForm(employee) {
     lastName: employee?.lastName || '',
     email: employee?.email || '',
     password: '',
-    role: employee?.role === 'PROJECT_ADMIN' ? 'PROJECT_ADMINISTRATOR' : employee?.role || 'EMPLOYEE',
+    role:
+      employee?.role === 'PROJECT_ADMIN'
+        ? 'PROJECT_ADMINISTRATOR'
+        : employee?.role || 'EMPLOYEE',
     phoneNumber: employee?.phoneNumber || '',
     department: employee?.department || '',
     designation: employee?.designation || '',
@@ -164,7 +209,10 @@ function employeeToForm(employee) {
     active: employee?.active ?? true,
     firstLogin: employee?.firstLogin ?? true,
     skillsText: listToText(employee?.skills, 'skillName'),
-    certificationsText: listToText(employee?.certifications, 'certificationName'),
+    certificationsText: listToText(
+      employee?.certifications,
+      'certificationName',
+    ),
     projectHistoryText: listToText(employee?.projectHistory, 'projectName'),
   };
 }
@@ -239,7 +287,10 @@ function toProjectPayload(form) {
 }
 
 export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
-  const role = currentUser?.role === 'PROJECT_ADMIN' ? 'PROJECT_ADMINISTRATOR' : currentUser?.role;
+  const role =
+    currentUser?.role === 'PROJECT_ADMIN'
+      ? 'PROJECT_ADMINISTRATOR'
+      : currentUser?.role;
   const isAdmin = role === 'ADMIN';
   const isOperator = role === 'OPERATOR';
   const isProjectAdministrator = role === 'PROJECT_ADMINISTRATOR';
@@ -247,7 +298,11 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
   const canViewEmployees = isAdmin || isOperator;
   const canImportEmployees = isOperator;
   const canManageDemand = isProjectAdministrator;
-  const landingView = canManageDemand ? 'Demand' : canViewEmployees ? 'People' : 'Profile';
+  const landingView = canManageDemand
+    ? 'Demand'
+    : canViewEmployees
+      ? 'People'
+      : 'Profile';
 
   const [activeNav, setActiveNav] = useState(landingView);
   const [profile, setProfile] = useState(null);
@@ -280,25 +335,37 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
     }
   }, [canManageDemand, onGoToDemand]);
 
-  const navItems = useMemo(() => [
-    'Profile',
-    ...(canViewEmployees ? ['People'] : []),
-    ...(canManageDemand ? ['Demand'] : []),
-    ...(canImportEmployees ? ['Bulk Import'] : []),
-  ], [canImportEmployees, canManageDemand, canViewEmployees]);
+  const navItems = useMemo(
+    () => [
+      'Profile',
+      ...(canViewEmployees ? ['People'] : []),
+      ...(canManageDemand ? ['Demand'] : []),
+      ...(canImportEmployees ? ['Bulk Import'] : []),
+    ],
+    [canImportEmployees, canManageDemand, canViewEmployees],
+  );
 
   const visibleEmployees = useMemo(() => {
     if (canViewEmployees) return employees;
     return profile ? [profile] : [];
   }, [employees, canViewEmployees, profile]);
 
-  const metrics = useMemo(() => ({
-    bench: visibleEmployees.filter((employee) => employee.status === 'ON_BENCH').length,
-    shortlisted: visibleEmployees.filter((employee) => employee.status === 'SHORTLISTED').length,
-    allocated: visibleEmployees.filter((employee) => employee.status === 'ALLOCATED').length,
-    total: visibleEmployees.length,
-    demand: projects.length,
-  }), [projects.length, visibleEmployees]);
+  const metrics = useMemo(
+    () => ({
+      bench: visibleEmployees.filter(
+        (employee) => employee.status === 'ON_BENCH',
+      ).length,
+      shortlisted: visibleEmployees.filter(
+        (employee) => employee.status === 'SHORTLISTED',
+      ).length,
+      allocated: visibleEmployees.filter(
+        (employee) => employee.status === 'ALLOCATED',
+      ).length,
+      total: visibleEmployees.length,
+      demand: projects.length,
+    }),
+    [projects.length, visibleEmployees],
+  );
 
   useEffect(() => {
     async function loadData() {
@@ -306,9 +373,12 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
       setStatus('');
 
       try {
-        const profileResponse = await fetch(`${API_BASE_URL}/api/employees/me`, {
-          headers: authHeaders(currentUser?.token),
-        });
+        const profileResponse = await fetch(
+          `${API_BASE_URL}/api/employees/me`,
+          {
+            headers: authHeaders(currentUser?.token),
+          },
+        );
 
         if (!profileResponse.ok) {
           throw new Error('Session expired or profile access denied.');
@@ -317,9 +387,12 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
         setProfile(await profileResponse.json());
 
         if (canViewEmployees) {
-          const employeesResponse = await fetch(`${API_BASE_URL}/api/admin/employees`, {
-            headers: authHeaders(currentUser?.token),
-          });
+          const employeesResponse = await fetch(
+            `${API_BASE_URL}/api/admin/employees`,
+            {
+              headers: authHeaders(currentUser?.token),
+            },
+          );
 
           if (!employeesResponse.ok) {
             throw new Error('Employee list access denied for this role.');
@@ -329,9 +402,12 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
         }
 
         if (canManageDemand) {
-          const projectsResponse = await fetch(`${API_BASE_URL}/api/demands/projects`, {
-            headers: authHeaders(currentUser?.token),
-          });
+          const projectsResponse = await fetch(
+            `${API_BASE_URL}/api/demands/projects`,
+            {
+              headers: authHeaders(currentUser?.token),
+            },
+          );
 
           if (!projectsResponse.ok) {
             throw new Error('Demand management access denied for this role.');
@@ -353,9 +429,12 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
     setIsLoadingMatched(true);
     setStatus('');
     try {
-      const response = await fetch(`${API_BASE_URL}/api/demands/projects/${projectId}/matched-employees`, {
-        headers: authHeaders(currentUser?.token),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/demands/projects/${projectId}/matched-employees`,
+        {
+          headers: authHeaders(currentUser?.token),
+        },
+      );
       if (!response.ok) {
         throw new Error('Could not fetch matched employees.');
       }
@@ -383,21 +462,29 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
     setStatus('');
     setIsShortlisting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/demands/projects/${selectedProject.id}/shortlist`, {
-        method: 'PUT',
-        headers: authHeaders(currentUser?.token),
-        body: JSON.stringify({ employeeIds }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/demands/projects/${selectedProject.id}/shortlist`,
+        {
+          method: 'PUT',
+          headers: authHeaders(currentUser?.token),
+          body: JSON.stringify({ employeeIds }),
+        },
+      );
       if (!response.ok) {
         const error = await response.json().catch(() => null);
-        throw new Error(error?.message || 'Could not shortlist selected employees.');
+        throw new Error(
+          error?.message || 'Could not shortlist selected employees.',
+        );
       }
       setStatus(`Successfully shortlisted ${employeeIds.length} employee(s).`);
       fetchMatchedEmployees(selectedProject.id);
       if (canViewEmployees) {
-        const employeesResponse = await fetch(`${API_BASE_URL}/api/admin/employees`, {
-          headers: authHeaders(currentUser?.token),
-        });
+        const employeesResponse = await fetch(
+          `${API_BASE_URL}/api/admin/employees`,
+          {
+            headers: authHeaders(currentUser?.token),
+          },
+        );
         if (employeesResponse.ok) {
           setEmployees(await employeesResponse.json());
         }
@@ -490,7 +577,11 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
         {
           method: 'PUT',
           headers: authHeaders(currentUser?.token),
-          body: JSON.stringify(useManagedEndpoint ? toEmployeePayload(editForm, false) : toSelfServicePayload(editForm)),
+          body: JSON.stringify(
+            useManagedEndpoint
+              ? toEmployeePayload(editForm, false)
+              : toSelfServicePayload(editForm),
+          ),
         },
       );
 
@@ -501,9 +592,11 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
 
       const updatedEmployee = await response.json();
       if (updatedEmployee.id === profile?.id) setProfile(updatedEmployee);
-      setEmployees((current) => current.map((employee) => (
-        employee.id === updatedEmployee.id ? updatedEmployee : employee
-      )));
+      setEmployees((current) =>
+        current.map((employee) =>
+          employee.id === updatedEmployee.id ? updatedEmployee : employee,
+        ),
+      );
       setEditingEmployee(null);
       setEditForm(DEFAULT_EMPLOYEE_FORM);
       setStatus(`${fullName(updatedEmployee)} was updated successfully.`);
@@ -537,19 +630,25 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
       }
 
       const savedProject = await response.json();
-      setProjects((current) => (
+      setProjects((current) =>
         editingProject
-          ? current.map((project) => (project.id === savedProject.id ? savedProject : project))
-          : [savedProject, ...current]
-      ));
+          ? current.map((project) =>
+              project.id === savedProject.id ? savedProject : project,
+            )
+          : [savedProject, ...current],
+      );
       setShowProjectForm(false);
       setEditingProject(null);
       setProjectForm(DEFAULT_PROJECT_FORM);
       if (!editingProject) {
         openProjectDashboard(savedProject);
-        setStatus(`${savedProject.projectName} was created. Select employees to shortlist below.`);
+        setStatus(
+          `${savedProject.projectName} was created. Select employees to shortlist below.`,
+        );
       } else {
-        setSelectedProject((current) => (current?.id === savedProject.id ? savedProject : current));
+        setSelectedProject((current) =>
+          current?.id === savedProject.id ? savedProject : current,
+        );
         setStatus(`${savedProject.projectName} demand was updated.`);
       }
     } catch (error) {
@@ -563,17 +662,22 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
     setStatus('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/demands/projects/${project.id}`, {
-        method: 'DELETE',
-        headers: authHeaders(currentUser?.token),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/demands/projects/${project.id}`,
+        {
+          method: 'DELETE',
+          headers: authHeaders(currentUser?.token),
+        },
+      );
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
         throw new Error(error?.message || 'Could not delete project demand.');
       }
 
-      setProjects((current) => current.filter((item) => item.id !== project.id));
+      setProjects((current) =>
+        current.filter((item) => item.id !== project.id),
+      );
       setStatus(`${project.projectName} demand was deleted.`);
     } catch (error) {
       setStatus(error.message || 'Could not delete project demand.');
@@ -594,11 +698,14 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
       const formData = new FormData();
       formData.append('file', importFile);
 
-      const response = await fetch(`${API_BASE_URL}/api/operator/employees/import`, {
-        method: 'POST',
-        headers: bearerHeaders(currentUser?.token),
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/operator/employees/import`,
+        {
+          method: 'POST',
+          headers: bearerHeaders(currentUser?.token),
+          body: formData,
+        },
+      );
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
@@ -608,13 +715,20 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
       const result = await response.json();
       setShowImportForm(false);
       setImportFile(null);
-      setStatus(`Imported ${result.importedCount} employee(s). Skipped ${result.skippedCount}. ${result.errors?.join(' ') || ''}`);
+      setStatus(
+        `Imported ${result.importedCount} employee(s). Skipped ${result.skippedCount}. ${result.errors?.join(' ') || ''}`,
+      );
 
-      const employeesResponse = await fetch(`${API_BASE_URL}/api/admin/employees`, {
-        headers: authHeaders(currentUser?.token),
-      });
+      const employeesResponse = await fetch(
+        `${API_BASE_URL}/api/admin/employees`,
+        {
+          headers: authHeaders(currentUser?.token),
+        },
+      );
       if (!employeesResponse.ok) {
-        throw new Error('Imported employees, but could not refresh employee list.');
+        throw new Error(
+          'Imported employees, but could not refresh employee list.',
+        );
       }
 
       setEmployees(await employeesResponse.json());
@@ -627,13 +741,18 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
   }
 
   function renderPeopleTable() {
-    const employeesForTable = activeNav === 'Profile' && profile ? [profile] : visibleEmployees;
+    const employeesForTable =
+      activeNav === 'Profile' && profile ? [profile] : visibleEmployees;
 
     return (
       <div className="table-section">
         <div className="table-header">
-          <span className="table-title">{activeNav === 'Profile' ? 'My Profile' : 'Employees'}</span>
-          <span className="table-badge">{isLoading ? 'Loading' : `${employeesForTable.length} record(s)`}</span>
+          <span className="table-title">
+            {activeNav === 'Profile' ? 'My Profile' : 'Employees'}
+          </span>
+          <span className="table-badge">
+            {isLoading ? 'Loading' : `${employeesForTable.length} record(s)`}
+          </span>
         </div>
         <table className="data-table employee-data-table">
           <thead>
@@ -655,7 +774,9 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
             {employeesForTable.map((employee) => (
               <tr key={employee.id}>
                 <td>{employee.employeeCode}</td>
-                <td style={{ color: 'var(--text)', fontWeight: 600 }}>{fullName(employee)}</td>
+                <td style={{ color: 'var(--text)', fontWeight: 600 }}>
+                  {fullName(employee)}
+                </td>
                 <td>{employee.email}</td>
                 <td>{employee.department || '-'}</td>
                 <td>{employee.designation || '-'}</td>
@@ -664,13 +785,21 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
                 <td>{employee.experienceYears || '-'}</td>
                 <td>{employee.role}</td>
                 <td>
-                  <span className={`status-pill ${employee.status === 'ON_BENCH' ? 'status-bench' : employee.status === 'ALLOCATED' ? 'status-alloc' : 'status-short'}`}>
+                  <span
+                    className={`status-pill ${employee.status === 'ON_BENCH' ? 'status-bench' : employee.status === 'ALLOCATED' ? 'status-alloc' : 'status-short'}`}
+                  >
                     {employee.status}
                   </span>
                 </td>
                 <td>
-                  <button className="mini-btn" type="button" onClick={() => openEditEmployee(employee)}>
-                    {canManageEmployees || employee.id === profile?.id ? 'Edit' : 'View'}
+                  <button
+                    className="mini-btn"
+                    type="button"
+                    onClick={() => openEditEmployee(employee)}
+                  >
+                    {canManageEmployees || employee.id === profile?.id
+                      ? 'Edit'
+                      : 'View'}
                   </button>
                 </td>
               </tr>
@@ -687,9 +816,13 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
         <div className="table-header">
           <div>
             <span className="table-title">Demand Projects</span>
-            <p className="table-subtitle-desc">Click a project row to open its dashboard and match employees</p>
+            <p className="table-subtitle-desc">
+              Click a project row to open its dashboard and match employees
+            </p>
           </div>
-          <span className="table-badge">{isLoading ? 'Loading' : `${projects.length} project(s)`}</span>
+          <span className="table-badge">
+            {isLoading ? 'Loading' : `${projects.length} project(s)`}
+          </span>
         </div>
         <table className="data-table">
           <thead>
@@ -712,16 +845,40 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
                 style={{ cursor: 'pointer' }}
                 onClick={() => openProjectDashboard(project)}
               >
-                <td style={{ color: 'var(--text)', fontWeight: 600 }}>{project.projectName}</td>
+                <td style={{ color: 'var(--text)', fontWeight: 600 }}>
+                  {project.projectName}
+                </td>
                 <td>{projectSkillsToText(project.requiredSkills) || '-'}</td>
                 <td>{project.requiredExperience || '-'}</td>
                 <td>{project.numberOfResourcesRequired}</td>
                 <td>{project.department || '-'}</td>
                 <td>{project.location || '-'}</td>
-                <td><span className="status-pill status-short">{project.status}</span></td>
                 <td>
-                  <button className="mini-btn" type="button" onClick={(e) => { e.stopPropagation(); openEditProject(project); }}>Edit</button>
-                  <button className="mini-btn danger" type="button" onClick={(e) => { e.stopPropagation(); handleDeleteProject(project); }}>Delete</button>
+                  <span className="status-pill status-short">
+                    {project.status}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    className="mini-btn"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditProject(project);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="mini-btn danger"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteProject(project);
+                    }}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
@@ -734,19 +891,23 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
   function renderProjectDashboard() {
     if (!selectedProject) return null;
 
-    const allChecked = matchedEmployees.length > 0 && selectedEmployeeIds.length === matchedEmployees.length;
+    const allChecked =
+      matchedEmployees.length > 0 &&
+      selectedEmployeeIds.length === matchedEmployees.length;
 
     const handleSelectAll = (e) => {
       if (e.target.checked) {
-        setSelectedEmployeeIds(matchedEmployees.map(emp => emp.id));
+        setSelectedEmployeeIds(matchedEmployees.map((emp) => emp.id));
       } else {
         setSelectedEmployeeIds([]);
       }
     };
 
     const handleSelectEmployee = (empId) => {
-      setSelectedEmployeeIds(prev => 
-        prev.includes(empId) ? prev.filter(id => id !== empId) : [...prev, empId]
+      setSelectedEmployeeIds((prev) =>
+        prev.includes(empId)
+          ? prev.filter((id) => id !== empId)
+          : [...prev, empId],
       );
     };
 
@@ -756,38 +917,55 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
           <div className="dashboard-header-main">
             <div>
               <div className="dashboard-project-kicker">Project Dashboard</div>
-              <h2 className="dashboard-project-name">{selectedProject.projectName}</h2>
-              <p className="dashboard-project-desc">{selectedProject.description || 'No description provided.'}</p>
+              <h2 className="dashboard-project-name">
+                {selectedProject.projectName}
+              </h2>
+              <p className="dashboard-project-desc">
+                {selectedProject.description || 'No description provided.'}
+              </p>
             </div>
             <div className="dashboard-project-meta">
-              <span className={`status-pill status-project-${selectedProject.status.toLowerCase()}`}>
+              <span
+                className={`status-pill status-project-${selectedProject.status.toLowerCase()}`}
+              >
                 {selectedProject.status}
               </span>
             </div>
           </div>
-          
+
           <div className="project-details-grid">
             <div className="detail-item">
               <span className="detail-label">Required Skills:</span>
               <span className="detail-value highlighted-skills">
-                {projectSkillsToText(selectedProject.requiredSkills) || 'None specified'}
+                {projectSkillsToText(selectedProject.requiredSkills) ||
+                  'None specified'}
               </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Experience Required:</span>
-              <span className="detail-value">{selectedProject.requiredExperience ? `${selectedProject.requiredExperience} years` : 'Any'}</span>
+              <span className="detail-value">
+                {selectedProject.requiredExperience
+                  ? `${selectedProject.requiredExperience} years`
+                  : 'Any'}
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Resources Needed:</span>
-              <span className="detail-value">{selectedProject.numberOfResourcesRequired}</span>
+              <span className="detail-value">
+                {selectedProject.numberOfResourcesRequired}
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Department:</span>
-              <span className="detail-value">{selectedProject.department || 'General'}</span>
+              <span className="detail-value">
+                {selectedProject.department || 'General'}
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Location:</span>
-              <span className="detail-value">{selectedProject.location || 'Remote'}</span>
+              <span className="detail-value">
+                {selectedProject.location || 'Remote'}
+              </span>
             </div>
           </div>
         </div>
@@ -795,37 +973,49 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
         <div className="table-section">
           <div className="table-header">
             <div>
-              <span className="table-title">Matched Employees ({matchedEmployees.length})</span>
-              <p className="table-subtitle-desc">Employees on bench whose skills match the project's required skills</p>
+              <span className="table-title">
+                Matched Employees ({matchedEmployees.length})
+              </span>
+              <p className="table-subtitle-desc">
+                Employees on bench whose skills match the project's required
+                skills
+              </p>
             </div>
             <div className="table-actions-group">
-              <button 
-                className="btn-primary shortlist-bulk-btn" 
-                type="button" 
+              <button
+                className="btn-primary shortlist-bulk-btn"
+                type="button"
                 disabled={selectedEmployeeIds.length === 0 || isShortlisting}
                 onClick={() => handleShortlist(selectedEmployeeIds)}
               >
-                {isShortlisting ? 'Shortlisting...' : `Shortlist Selected (${selectedEmployeeIds.length})`}
+                {isShortlisting
+                  ? 'Shortlisting...'
+                  : `Shortlist Selected (${selectedEmployeeIds.length})`}
               </button>
             </div>
           </div>
 
           {isLoadingMatched ? (
-            <div className="table-loading-spinner">Loading matched candidates...</div>
+            <div className="table-loading-spinner">
+              Loading matched candidates...
+            </div>
           ) : matchedEmployees.length === 0 ? (
             <div className="empty-state project-empty-state">
               <h3>No matching candidates found</h3>
-              <p>There are currently no employees on the bench whose skills match the required skills of this project.</p>
+              <p>
+                There are currently no employees on the bench whose skills match
+                the required skills of this project.
+              </p>
             </div>
           ) : (
             <table className="data-table matched-data-table">
               <thead>
                 <tr>
                   <th style={{ width: '40px', textAlign: 'center' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={allChecked} 
-                      onChange={handleSelectAll} 
+                    <input
+                      type="checkbox"
+                      checked={allChecked}
+                      onChange={handleSelectAll}
                     />
                   </th>
                   <th>Code</th>
@@ -842,32 +1032,46 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
                 {matchedEmployees.map((employee) => {
                   const isChecked = selectedEmployeeIds.includes(employee.id);
                   const isBench = employee.status === 'ON_BENCH';
-                  const empSkills = matchedSkillsText(employee, selectedProject.requiredSkills);
+                  const empSkills = matchedSkillsText(
+                    employee,
+                    selectedProject.requiredSkills,
+                  );
                   return (
-                    <tr key={employee.id} className={isChecked ? 'row-selected' : ''}>
+                    <tr
+                      key={employee.id}
+                      className={isChecked ? 'row-selected' : ''}
+                    >
                       <td style={{ textAlign: 'center' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={isChecked} 
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
                           onChange={() => handleSelectEmployee(employee.id)}
                           disabled={!isBench}
                         />
                       </td>
                       <td>{employee.employeeCode}</td>
-                      <td style={{ color: 'var(--text)', fontWeight: 600 }}>{fullName(employee)}</td>
+                      <td style={{ color: 'var(--text)', fontWeight: 600 }}>
+                        {fullName(employee)}
+                      </td>
                       <td>{employee.department || '-'}</td>
                       <td>{employee.designation || '-'}</td>
-                      <td>{employee.experienceYears ? `${employee.experienceYears} yrs` : '-'}</td>
+                      <td>
+                        {employee.experienceYears
+                          ? `${employee.experienceYears} yrs`
+                          : '-'}
+                      </td>
                       <td className="candidate-skills-cell">{empSkills}</td>
                       <td>
-                        <span className={`status-pill ${employee.status === 'ON_BENCH' ? 'status-bench' : employee.status === 'ALLOCATED' ? 'status-alloc' : 'status-short'}`}>
+                        <span
+                          className={`status-pill ${employee.status === 'ON_BENCH' ? 'status-bench' : employee.status === 'ALLOCATED' ? 'status-alloc' : 'status-short'}`}
+                        >
                           {employee.status}
                         </span>
                       </td>
                       <td>
-                        <button 
-                          className="mini-btn accent" 
-                          type="button" 
+                        <button
+                          className="mini-btn accent"
+                          type="button"
                           disabled={!isBench || isShortlisting}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -899,18 +1103,49 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
         </div>
         <div className="nav-links">
           {navItems.map((item) => (
-            <a key={item} href="#" onClick={(event) => { event.preventDefault(); setActiveNav(item); if (item !== 'Demand') setSelectedProject(null); }}>
+            <a
+              key={item}
+              href="#"
+              onClick={(event) => {
+                event.preventDefault();
+                setActiveNav(item);
+                if (item !== 'Demand') setSelectedProject(null);
+              }}
+            >
               {item}
             </a>
           ))}
         </div>
         <div className="nav-actions">
-          <span className="nav-user">{currentUser?.email} · {role}</span>
-          <button className="btn-ghost" onClick={onLogout}>Sign out</button>
-          {canManageDemand ? <button className="btn-primary" onClick={onGoToDemand || openCreateProject}>+ Create Project</button> : null}
-          {canImportEmployees ? <button className="btn-ghost" onClick={() => setShowImportForm(true)}>Bulk Import</button> : null}
+          <span className="nav-user">
+            {currentUser?.email} · {role}
+          </span>
+          <button className="btn-ghost" onClick={onLogout}>
+            Sign out
+          </button>
+          {canManageDemand ? (
+            <button
+              className="btn-primary"
+              onClick={onGoToDemand || openCreateProject}
+            >
+              + Create Project
+            </button>
+          ) : null}
+          {canImportEmployees ? (
+            <button
+              className="btn-ghost"
+              onClick={() => setShowImportForm(true)}
+            >
+              Bulk Import
+            </button>
+          ) : null}
           {canManageEmployees ? (
-            <button className="btn-primary" onClick={() => setShowEmployeeForm(true)}>+ Add Employee</button>
+            <button
+              className="btn-primary"
+              onClick={() => setShowEmployeeForm(true)}
+            >
+              + Add Employee
+            </button>
           ) : null}
         </div>
       </nav>
@@ -942,7 +1177,15 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
           <div className="preview-topbar">
             <div>
               <div className="preview-topbar-title">
-                {activeNav === 'Demand' ? 'Demand Management' : activeNav === 'Bulk Import' ? 'Bulk Import' : activeNav === 'Profile' ? 'Employee Profile' : activeNav === 'ProjectDashboard' ? 'Project Dashboard' : 'People Dashboard'}
+                {activeNav === 'Demand'
+                  ? 'Demand Management'
+                  : activeNav === 'Bulk Import'
+                    ? 'Bulk Import'
+                    : activeNav === 'Profile'
+                      ? 'Employee Profile'
+                      : activeNav === 'ProjectDashboard'
+                        ? 'Project Dashboard'
+                        : 'People Dashboard'}
               </div>
               <div className="workspace-subtitle">
                 {activeNav === 'ProjectDashboard'
@@ -958,19 +1201,35 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
             </div>
             <div className="preview-topbar-right">
               {activeNav === 'ProjectDashboard' ? (
-                <button 
-                  className="mini-btn" 
-                  type="button" 
-                  onClick={() => { 
-                    setActiveNav('Demand'); 
-                    setSelectedProject(null); 
+                <button
+                  className="mini-btn"
+                  type="button"
+                  onClick={() => {
+                    setActiveNav('Demand');
+                    setSelectedProject(null);
                   }}
                 >
                   &larr; Back to Demand
                 </button>
               ) : null}
-              {canManageDemand && activeNav === 'Demand' ? <button className="mini-btn accent" type="button" onClick={openCreateProject}>New Demand</button> : null}
-              {canImportEmployees && activeNav === 'Bulk Import' ? <button className="mini-btn accent" type="button" onClick={() => setShowImportForm(true)}>Upload File</button> : null}
+              {canManageDemand && activeNav === 'Demand' ? (
+                <button
+                  className="mini-btn accent"
+                  type="button"
+                  onClick={openCreateProject}
+                >
+                  New Demand
+                </button>
+              ) : null}
+              {canImportEmployees && activeNav === 'Bulk Import' ? (
+                <button
+                  className="mini-btn accent"
+                  type="button"
+                  onClick={() => setShowImportForm(true)}
+                >
+                  Upload File
+                </button>
+              ) : null}
             </div>
           </div>
 
@@ -993,25 +1252,50 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
                   <div className="metric-sub">Active projects</div>
                 </div>
                 <div className="metric-card">
-                  <div className="metric-label">{canManageDemand ? 'Demands' : 'Profiles'}</div>
-                  <div className="metric-value">{canManageDemand ? metrics.demand : metrics.total}</div>
-                  <div className="metric-sub">{canManageDemand ? 'Open workspace' : 'Visible records'}</div>
+                  <div className="metric-label">
+                    {canManageDemand ? 'Demands' : 'Profiles'}
+                  </div>
+                  <div className="metric-value">
+                    {canManageDemand ? metrics.demand : metrics.total}
+                  </div>
+                  <div className="metric-sub">
+                    {canManageDemand ? 'Open workspace' : 'Visible records'}
+                  </div>
                 </div>
               </div>
             ) : null}
 
-            {status ? <div className="employee-form-status">{status}</div> : null}
+            {status ? (
+              <div className="employee-form-status">{status}</div>
+            ) : null}
 
-            {activeNav === 'Demand' && canManageDemand ? renderDemandTable() : null}
+            {activeNav === 'Demand' && canManageDemand
+              ? renderDemandTable()
+              : null}
             {activeNav === 'Bulk Import' && canImportEmployees ? (
               <div className="empty-state">
                 <h2>Bulk employee import</h2>
-                <p>Upload a CSV or Excel file with employeeCode, email, password, role, firstName, lastName, department, designation, joiningDate, location, managerId, phoneNumber, status, skills, and experienceYears.</p>
-                <button className="btn-primary import-inline-btn" type="button" onClick={() => setShowImportForm(true)}>Upload Import File</button>
+                <p>
+                  Upload a CSV or Excel file with employeeCode, email, password,
+                  role, firstName, lastName, department, designation,
+                  joiningDate, location, managerId, phoneNumber, status, skills,
+                  and experienceYears.
+                </p>
+                <button
+                  className="btn-primary import-inline-btn"
+                  type="button"
+                  onClick={() => setShowImportForm(true)}
+                >
+                  Upload Import File
+                </button>
               </div>
             ) : null}
-            {(activeNav === 'People' || activeNav === 'Profile') ? renderPeopleTable() : null}
-            {activeNav === 'ProjectDashboard' && selectedProject ? renderProjectDashboard() : null}
+            {activeNav === 'People' || activeNav === 'Profile'
+              ? renderPeopleTable()
+              : null}
+            {activeNav === 'ProjectDashboard' && selectedProject
+              ? renderProjectDashboard()
+              : null}
           </div>
         </section>
       </main>
@@ -1035,7 +1319,13 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
       {editingEmployee ? (
         <EmployeeModal
           title={canManageEmployees ? 'Edit Employee' : 'Employee Profile'}
-          kicker={canManageEmployees ? 'Managed Edit' : editingEmployee.id === profile?.id ? 'Self Service' : 'View Only'}
+          kicker={
+            canManageEmployees
+              ? 'Managed Edit'
+              : editingEmployee.id === profile?.id
+                ? 'Self Service'
+                : 'View Only'
+          }
           form={editForm}
           onChange={updateEditForm}
           onSubmit={handleUpdateEmployee}
@@ -1054,28 +1344,62 @@ export default function SRHHomepage({ currentUser, onLogout, onGoToDemand }) {
           isEditing={Boolean(editingProject)}
           onChange={updateProjectForm}
           onSubmit={handleSaveProject}
-          onClose={() => { setShowProjectForm(false); setEditingProject(null); }}
+          onClose={() => {
+            setShowProjectForm(false);
+            setEditingProject(null);
+          }}
         />
       ) : null}
 
       {showImportForm && canImportEmployees ? (
         <div className="employee-modal-backdrop">
-          <div className="employee-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+          <div
+            className="employee-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="import-title"
+          >
             <div className="employee-modal-header">
               <div>
                 <div className="employee-modal-kicker">Operator Action</div>
                 <h2 id="import-title">Bulk Import Employees</h2>
               </div>
-              <button className="employee-close" type="button" onClick={() => setShowImportForm(false)} aria-label="Close import form">X</button>
+              <button
+                className="employee-close"
+                type="button"
+                onClick={() => setShowImportForm(false)}
+                aria-label="Close import form"
+              >
+                X
+              </button>
             </div>
             <form className="employee-form" onSubmit={handleImportEmployees}>
               <label className="employee-field">
                 <span>CSV or Excel file</span>
-                <input type="file" accept=".csv,.xlsx,.xls" onChange={(event) => setImportFile(event.target.files?.[0] || null)} required />
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={(event) =>
+                    setImportFile(event.target.files?.[0] || null)
+                  }
+                  required
+                />
               </label>
               <div className="employee-form-actions">
-                <button className="btn-ghost" type="button" onClick={() => setShowImportForm(false)}>Cancel</button>
-                <button className="btn-primary" type="submit" disabled={isImporting}>{isImporting ? 'Importing...' : 'Import Employees'}</button>
+                <button
+                  className="btn-ghost"
+                  type="button"
+                  onClick={() => setShowImportForm(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn-primary"
+                  type="submit"
+                  disabled={isImporting}
+                >
+                  {isImporting ? 'Importing...' : 'Import Employees'}
+                </button>
               </div>
             </form>
           </div>
@@ -1114,16 +1438,33 @@ function EmployeeModal({
   if (step === 'role') {
     return (
       <div className="employee-modal-backdrop">
-        <div className="employee-modal employee-modal-wide" role="dialog" aria-modal="true" aria-labelledby="employee-form-title">
+        <div
+          className="employee-modal employee-modal-wide"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="employee-form-title"
+        >
           <div className="employee-modal-header">
             <div>
-              <div className="employee-modal-kicker">Step 1 of 2 · Account Type</div>
+              <div className="employee-modal-kicker">
+                Step 1 of 2 · Account Type
+              </div>
               <h2 id="employee-form-title">Select a role</h2>
             </div>
-            <button className="employee-close" type="button" onClick={onClose} aria-label="Close employee form">X</button>
+            <button
+              className="employee-close"
+              type="button"
+              onClick={onClose}
+              aria-label="Close employee form"
+            >
+              X
+            </button>
           </div>
 
-          <p className="role-picker-sub">Pick the kind of account you want to create. Role-specific details appear in the next step.</p>
+          <p className="role-picker-sub">
+            Pick the kind of account you want to create. Role-specific details
+            appear in the next step.
+          </p>
           <div className="role-card-grid">
             {ROLE_OPTIONS.map((role) => {
               const meta = ROLE_META[role];
@@ -1142,7 +1483,47 @@ function EmployeeModal({
                     <span className="role-card-desc">{meta.description}</span>
                   </span>
                   <span className="role-card-arrow" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="role-card-grid">
+            {ROLE_OPTIONS.map((role) => {
+              const meta = ROLE_META[role];
+              const selected = form.role === role;
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  className={`role-card${selected ? ' selected' : ''}`}
+                  onClick={() => selectRole(role)}
+                >
+                  <span className="role-card-icon">{meta.icon}</span>
+                  <span className="role-card-body">
+                    <span className="role-card-name">{meta.label}</span>
+                    <span className="role-card-tag">{meta.tagline}</span>
+                    <span className="role-card-desc">{meta.description}</span>
+                  </span>
+                  <span className="role-card-arrow" aria-hidden="true">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M5 12h14M13 6l6 6-6 6" />
                     </svg>
                   </span>
@@ -1157,13 +1538,27 @@ function EmployeeModal({
 
   return (
     <div className="employee-modal-backdrop">
-      <div className="employee-modal employee-modal-wide" role="dialog" aria-modal="true" aria-labelledby="employee-form-title">
+      <div
+        className="employee-modal employee-modal-wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="employee-form-title"
+      >
         <div className="employee-modal-header">
           <div>
-            <div className="employee-modal-kicker">{roleSelection ? 'Step 2 of 2 · Details' : kicker}</div>
+            <div className="employee-modal-kicker">
+              {roleSelection ? 'Step 2 of 2 · Details' : kicker}
+            </div>
             <h2 id="employee-form-title">{title}</h2>
           </div>
-          <button className="employee-close" type="button" onClick={onClose} aria-label="Close employee form">X</button>
+          <button
+            className="employee-close"
+            type="button"
+            onClick={onClose}
+            aria-label="Close employee form"
+          >
+            X
+          </button>
         </div>
 
         <form className="employee-form employee-form-grid" onSubmit={onSubmit}>
@@ -1176,56 +1571,166 @@ function EmployeeModal({
                   <span className="role-summary-tag">{activeMeta.tagline}</span>
                 </span>
               </span>
-              <button type="button" className="role-summary-change" onClick={() => setStep('role')}>Change role</button>
+              <button
+                type="button"
+                className="role-summary-change"
+                onClick={() => setStep('role')}
+              >
+                Change role
+              </button>
             </div>
           ) : (
             <label className="employee-field">
               <span>Role</span>
-              <select value={form.role} onChange={(event) => onChange('role', event.target.value)} disabled={disableAll || lockManagedFields}>
-                {ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
+              <select
+                value={form.role}
+                onChange={(event) => onChange('role', event.target.value)}
+                disabled={disableAll || lockManagedFields}
+              >
+                {ROLE_OPTIONS.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
               </select>
             </label>
           )}
-          <Field label="Employee Code" value={form.employeeCode} onChange={(value) => onChange('employeeCode', value)} disabled={disableAll || lockManagedFields} required />
-          <Field label="First Name" value={form.firstName} onChange={(value) => onChange('firstName', value)} disabled={disableAll || lockManagedFields} required />
-          <Field label="Last Name" value={form.lastName} onChange={(value) => onChange('lastName', value)} disabled={disableAll || lockManagedFields} required />
-          <Field label="Email" type="email" value={form.email} onChange={(value) => onChange('email', value)} disabled={disableAll || lockManagedFields} required />
-          <Field label="Phone Number" value={form.phoneNumber} onChange={(value) => onChange('phoneNumber', value)} disabled={disableAll} />
-          <Field label="Location" value={form.location} onChange={(value) => onChange('location', value)} disabled={disableAll} />
+          <Field
+            label="Employee Code"
+            value={form.employeeCode}
+            onChange={(value) => onChange('employeeCode', value)}
+            disabled={disableAll || lockManagedFields}
+            required
+          />
+          <Field
+            label="First Name"
+            value={form.firstName}
+            onChange={(value) => onChange('firstName', value)}
+            disabled={disableAll || lockManagedFields}
+            required
+          />
+          <Field
+            label="Last Name"
+            value={form.lastName}
+            onChange={(value) => onChange('lastName', value)}
+            disabled={disableAll || lockManagedFields}
+            required
+          />
+          <Field
+            label="Email"
+            type="email"
+            value={form.email}
+            onChange={(value) => onChange('email', value)}
+            disabled={disableAll || lockManagedFields}
+            required
+          />
+          <Field
+            label="Phone Number"
+            value={form.phoneNumber}
+            onChange={(value) => onChange('phoneNumber', value)}
+            disabled={disableAll}
+          />
+          <Field
+            label="Location"
+            value={form.location}
+            onChange={(value) => onChange('location', value)}
+            disabled={disableAll}
+          />
 
           {isEmployee ? (
             <>
-              <Field label="Department" value={form.department} onChange={(value) => onChange('department', value)} disabled={disableAll || lockManagedFields} />
-              <Field label="Designation" value={form.designation} onChange={(value) => onChange('designation', value)} disabled={disableAll || lockManagedFields} />
-              <Field label="Joining Date" type="date" value={form.joiningDate} onChange={(value) => onChange('joiningDate', value)} disabled={disableAll || lockManagedFields} />
-              <Field label="Experience Years" type="number" step="0.1" value={form.experienceYears} onChange={(value) => onChange('experienceYears', value)} disabled={disableAll} />
-              <Field label="Manager ID" type="number" value={form.managerId} onChange={(value) => onChange('managerId', value)} disabled={disableAll || lockManagedFields} />
+              <Field
+                label="Department"
+                value={form.department}
+                onChange={(value) => onChange('department', value)}
+                disabled={disableAll || lockManagedFields}
+              />
+              <Field
+                label="Designation"
+                value={form.designation}
+                onChange={(value) => onChange('designation', value)}
+                disabled={disableAll || lockManagedFields}
+              />
+              <Field
+                label="Joining Date"
+                type="date"
+                value={form.joiningDate}
+                onChange={(value) => onChange('joiningDate', value)}
+                disabled={disableAll || lockManagedFields}
+              />
+              <Field
+                label="Experience Years"
+                type="number"
+                step="0.1"
+                value={form.experienceYears}
+                onChange={(value) => onChange('experienceYears', value)}
+                disabled={disableAll}
+              />
+              <Field
+                label="Manager ID"
+                type="number"
+                value={form.managerId}
+                onChange={(value) => onChange('managerId', value)}
+                disabled={disableAll || lockManagedFields}
+              />
               {showEmployeeStatus ? (
                 <label className="employee-field">
                   <span>Status</span>
-                  <select value={form.status} onChange={(event) => onChange('status', event.target.value)} disabled={disableAll || lockManagedFields}>
-                    {EMPLOYEE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
+                  <select
+                    value={form.status}
+                    onChange={(event) => onChange('status', event.target.value)}
+                    disabled={disableAll || lockManagedFields}
+                  >
+                    {EMPLOYEE_STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
                   </select>
                 </label>
               ) : null}
-              <Field label="Skills" value={form.skillsText} onChange={(value) => onChange('skillsText', value)} placeholder="Java, React, PostgreSQL" disabled={disableAll} />
+              <Field
+                label="Skills"
+                value={form.skillsText}
+                onChange={(value) => onChange('skillsText', value)}
+                placeholder="Java, React, PostgreSQL"
+                disabled={disableAll}
+              />
             </>
           ) : null}
           {canManageAllFields ? (
-            <Field label={requirePassword ? 'Temporary Password' : 'Reset Password'} type="password" value={form.password} onChange={(value) => onChange('password', value)} minLength={6} required={requirePassword} placeholder={requirePassword ? '' : 'Leave blank to keep existing'} />
+            <Field
+              label={requirePassword ? 'Temporary Password' : 'Reset Password'}
+              type="password"
+              value={form.password}
+              onChange={(value) => onChange('password', value)}
+              minLength={6}
+              required={requirePassword}
+              placeholder={
+                requirePassword ? '' : 'Leave blank to keep existing'
+              }
+            />
           ) : null}
 
           {canManageAllFields ? (
             <label className="employee-field employee-toggle">
               <span>Active Account</span>
-              <input type="checkbox" checked={form.active} onChange={(event) => onChange('active', event.target.checked)} />
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(event) => onChange('active', event.target.checked)}
+              />
             </label>
           ) : null}
 
           <div className="employee-form-actions employee-form-actions-wide">
-            <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>
+            <button className="btn-ghost" type="button" onClick={onClose}>
+              Cancel
+            </button>
             {!readOnly ? (
-              <button className="btn-primary" type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : submitLabel}</button>
+              <button className="btn-primary" type="submit" disabled={isSaving}>
+                {isSaving ? 'Saving...' : submitLabel}
+              </button>
             ) : null}
           </div>
         </form>
@@ -1234,34 +1739,92 @@ function EmployeeModal({
   );
 }
 
-function ProjectModal({ form, isSaving, isEditing, onChange, onSubmit, onClose }) {
+function ProjectModal({
+  form,
+  isSaving,
+  isEditing,
+  onChange,
+  onSubmit,
+  onClose,
+}) {
   return (
     <div className="employee-modal-backdrop">
-      <div className="employee-modal employee-modal-wide" role="dialog" aria-modal="true" aria-labelledby="project-form-title">
+      <div
+        className="employee-modal employee-modal-wide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-form-title"
+      >
         <div className="employee-modal-header">
           <div>
             <div className="employee-modal-kicker">Demand Management</div>
-            <h2 id="project-form-title">{isEditing ? 'Edit Project Demand' : 'Create Project Demand'}</h2>
+            <h2 id="project-form-title">
+              {isEditing ? 'Edit Project Demand' : 'Create Project Demand'}
+            </h2>
           </div>
-          <button className="employee-close" type="button" onClick={onClose} aria-label="Close project form">X</button>
+          <button
+            className="employee-close"
+            type="button"
+            onClick={onClose}
+            aria-label="Close project form"
+          >
+            X
+          </button>
         </div>
 
         <form className="employee-form employee-form-grid" onSubmit={onSubmit}>
-          <Field label="Project Name" value={form.projectName} onChange={(value) => onChange('projectName', value)} required />
-          <Field label="Required Experience" type="number" step="0.1" value={form.requiredExperience} onChange={(value) => onChange('requiredExperience', value)} />
+          <Field
+            label="Project Name"
+            value={form.projectName}
+            onChange={(value) => onChange('projectName', value)}
+            required
+          />
+          <Field
+            label="Required Experience"
+            type="number"
+            step="0.1"
+            value={form.requiredExperience}
+            onChange={(value) => onChange('requiredExperience', value)}
+          />
           <label className="employee-field employee-field-wide">
             <span>Description</span>
-            <textarea value={form.description} onChange={(event) => onChange('description', event.target.value)} />
+            <textarea
+              value={form.description}
+              onChange={(event) => onChange('description', event.target.value)}
+            />
           </label>
-          <Field label="Required Skills" value={form.requiredSkillsText} onChange={(value) => onChange('requiredSkillsText', value)} placeholder="Java, Spring Boot, React" />
-          <Field label="Number of Resources Required" type="number" min="1" value={form.numberOfResourcesRequired} onChange={(value) => onChange('numberOfResourcesRequired', value)} required />
-          <Field label="Department" value={form.department} onChange={(value) => onChange('department', value)} />
-          <Field label="Location" value={form.location} onChange={(value) => onChange('location', value)} />
-
+          <Field
+            label="Required Skills"
+            value={form.requiredSkillsText}
+            onChange={(value) => onChange('requiredSkillsText', value)}
+            placeholder="Java, Spring Boot, React"
+          />
+          <Field
+            label="Number of Resources Required"
+            type="number"
+            min="1"
+            value={form.numberOfResourcesRequired}
+            onChange={(value) => onChange('numberOfResourcesRequired', value)}
+            required
+          />
+          <Field
+            label="Department"
+            value={form.department}
+            onChange={(value) => onChange('department', value)}
+          />
+          <Field
+            label="Location"
+            value={form.location}
+            onChange={(value) => onChange('location', value)}
+          />
 
           <div className="employee-form-actions employee-form-actions-wide">
-            <button className="btn-ghost" type="button" onClick={onClose}>Cancel</button>
-            <button className="btn-primary" type="submit" disabled={isSaving}>{isSaving ? 'Saving...' : 'Save Demand'}</button>
+            <button className="btn-ghost" type="button" onClick={onClose}>
+              Cancel
+            </button>
+            <button className="btn-primary" type="submit" disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Demand'}
+            </button>
           </div>
         </form>
       </div>
@@ -1273,9 +1836,12 @@ function Field({ label, value, onChange, disabled, ...props }) {
   return (
     <label className="employee-field">
       <span>{label}</span>
-      <input value={value} onChange={(event) => onChange(event.target.value)} disabled={disabled} {...props} />
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        {...props}
+      />
     </label>
   );
 }
-
-
